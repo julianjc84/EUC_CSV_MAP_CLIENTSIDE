@@ -90,8 +90,7 @@ window.EUCGPSMap = function(containerId) {
             components.routeRenderer,
             components.positionTracker,
             components.overlayState,
-            components.panels,
-            components.routeLegend
+            components.panels
         );
 
         return success;

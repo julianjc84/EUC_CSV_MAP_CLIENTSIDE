@@ -17,20 +17,11 @@
     /* Accent (blue in light, green in dark) */
     --theme-accent: #0d6efd;
     --theme-accent-hover: #0056b3;
-    --theme-accent-outline: #007bff;
+    --theme-accent-contrast: #fff;
     --theme-accent-bg-hover: #e7f3ff;
     --theme-accent-glow: rgba(0, 123, 255, 0.3);
 
-    /* Buttons */
-    --theme-btn-primary-bg: #0d6efd;
-    --theme-btn-primary-border: #0d6efd;
-    --theme-btn-primary-text: #fff;
-    --theme-btn-primary-hover-bg: #0b5ed7;
-    --theme-btn-primary-hover-border: #0b5ed7;
-    --theme-btn-outline-border: #0d6efd;
-    --theme-btn-outline-text: #0d6efd;
-    --theme-btn-outline-hover-bg: #0d6efd;
-    --theme-btn-outline-hover-text: #fff;
+    /* Buttons (neutral) */
     --theme-btn-light-border: #dee2e6;
     --theme-btn-light-text: #212529;
 
@@ -62,8 +53,6 @@
 
     /* Footer */
     --theme-footer-bg: #e9ecef;
-    --theme-footer-text: #212529;
-    --theme-footer-border: #dee2e6;
     --theme-footer-accent: #198754;
     --theme-footer-link: #0d6efd;
     --theme-footer-link-hover: #0a58ca;
@@ -78,10 +67,32 @@
     /* Diagnostic */
     --theme-diagnostic-unmapped: rgba(255, 193, 7, 0.15);
     --theme-diagnostic-code-bg: #f0f0f0;
-    --theme-diagnostic-code-text: inherit;
+
+    /* Semantic */
+    --theme-danger: #dc3545;
 
     /* Table (for dark-mode Bootstrap overrides) */
     --theme-table-secondary-strong: inherit;
+
+    /* Map Controls — light mode: white/light surfaces, dark text */
+    --map-ctrl-bg: rgba(255, 255, 255, 0.9);
+    --map-ctrl-border: rgba(0, 0, 0, 0.2);
+    --map-ctrl-text: #212529;
+    --map-ctrl-text-secondary: rgba(0, 0, 0, 0.5);
+    --map-ctrl-hover-bg: rgba(0, 0, 0, 0.08);
+    --map-ctrl-hover-border: rgba(0, 0, 0, 0.35);
+    --map-ctrl-inactive-bg: rgba(0, 0, 0, 0.05);
+    --map-ctrl-active-bg: rgba(13, 110, 253, 0.3);
+    --map-ctrl-active-border: rgba(13, 110, 253, 0.8);
+    --map-ctrl-active-hover-bg: rgba(13, 110, 253, 0.5);
+    --map-ctrl-active-hover-border: rgba(13, 110, 253, 1.0);
+    --map-ctrl-disabled-opacity: 0.3;
+    --map-ctrl-panel-bg: rgba(255, 255, 255, 0.95);
+    --map-ctrl-panel-border: rgba(0, 0, 0, 0.12);
+    --map-ctrl-info-bg: rgba(0, 0, 0, 0.04);
+    --map-ctrl-danger-bg: rgba(244, 67, 54, 0.3);
+    --map-ctrl-danger-border: rgba(244, 67, 54, 0.8);
+    --map-ctrl-danger-hover-bg: rgba(244, 67, 54, 0.5);
 }
 
 /* Dark theme */
@@ -100,20 +111,11 @@ body.dark-mode {
     /* Accent (green) */
     --theme-accent: #00ff00;
     --theme-accent-hover: #00cc00;
-    --theme-accent-outline: #00ff00;
+    --theme-accent-contrast: #000;
     --theme-accent-bg-hover: #1a3a1a;
     --theme-accent-glow: rgba(0, 255, 0, 0.3);
 
-    /* Buttons */
-    --theme-btn-primary-bg: #00ff00;
-    --theme-btn-primary-border: #00ff00;
-    --theme-btn-primary-text: #000;
-    --theme-btn-primary-hover-bg: #00cc00;
-    --theme-btn-primary-hover-border: #00cc00;
-    --theme-btn-outline-border: #00ff00;
-    --theme-btn-outline-text: #00ff00;
-    --theme-btn-outline-hover-bg: #00ff00;
-    --theme-btn-outline-hover-text: #000;
+    /* Buttons (neutral) */
     --theme-btn-light-border: #f8f9fa;
     --theme-btn-light-text: #f8f9fa;
 
@@ -145,8 +147,6 @@ body.dark-mode {
 
     /* Footer */
     --theme-footer-bg: #0a0a0a;
-    --theme-footer-text: #e0e0e0;
-    --theme-footer-border: #333;
     --theme-footer-accent: #00ff00;
     --theme-footer-link: #4dabf7;
     --theme-footer-link-hover: #74c0fc;
@@ -161,10 +161,184 @@ body.dark-mode {
     /* Diagnostic */
     --theme-diagnostic-unmapped: rgba(255, 193, 7, 0.1);
     --theme-diagnostic-code-bg: #1a1a1a;
-    --theme-diagnostic-code-text: #00ff00;
+
+    /* Semantic */
+    --theme-danger: #ff6b6b;
 
     /* Table */
     --theme-table-secondary-strong: #00ff00;
+
+    /* Map Controls — dark mode: dark surfaces, light text, green accent */
+    --map-ctrl-bg: rgba(0, 0, 0, 0.8);
+    --map-ctrl-border: rgba(255, 255, 255, 1.0);
+    --map-ctrl-text: #fff;
+    --map-ctrl-text-secondary: rgba(255, 255, 255, 0.6);
+    --map-ctrl-hover-bg: rgba(255, 255, 255, 0.2);
+    --map-ctrl-hover-border: rgba(255, 255, 255, 0.5);
+    --map-ctrl-inactive-bg: rgba(255, 255, 255, 0.1);
+    --map-ctrl-active-bg: rgba(0, 255, 0, 0.3);
+    --map-ctrl-active-border: rgba(0, 255, 0, 0.8);
+    --map-ctrl-active-hover-bg: rgba(0, 255, 0, 0.5);
+    --map-ctrl-active-hover-border: rgba(0, 255, 0, 1.0);
+    --map-ctrl-panel-bg: rgba(0, 0, 0, 0.85);
+    --map-ctrl-panel-border: rgba(255, 255, 255, 0.2);
+    --map-ctrl-info-bg: rgba(255, 255, 255, 0.05);
+}
+
+/* ==================== Map Controls ==================== */
+
+/* --- Map Control Buttons --- */
+.map-ctrl-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    max-width: 36px;
+    max-height: 36px;
+    border: 1px solid var(--map-ctrl-border);
+    background: var(--map-ctrl-bg);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    color: var(--map-ctrl-text);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    -webkit-tap-highlight-color: transparent;
+}
+.map-ctrl-btn:hover {
+    background: var(--map-ctrl-hover-bg);
+    border-color: var(--map-ctrl-hover-border);
+    transform: scale(1.05);
+}
+.map-ctrl-btn.active {
+    background: var(--map-ctrl-active-bg);
+    border-color: var(--map-ctrl-active-border);
+}
+.map-ctrl-btn.active:hover {
+    background: var(--map-ctrl-active-hover-bg);
+    border-color: var(--map-ctrl-active-hover-border);
+}
+.map-ctrl-btn:disabled {
+    opacity: var(--map-ctrl-disabled-opacity);
+    cursor: not-allowed;
+}
+.map-ctrl-btn:disabled:hover {
+    background: var(--map-ctrl-bg);
+    border-color: var(--map-ctrl-border);
+    transform: none;
+}
+.map-ctrl-btn.fab {
+    font-size: 18px;
+    z-index: 1001;
+}
+
+/* --- Panel Buttons (inside route/overlay/map-views panels) --- */
+.map-panel-btn {
+    width: 100%;
+    padding: 7px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    border: 1px solid var(--map-ctrl-panel-border);
+    background: var(--map-ctrl-inactive-bg);
+    color: var(--map-ctrl-text);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+.map-panel-btn:hover {
+    background: var(--map-ctrl-hover-bg);
+    border-color: var(--map-ctrl-hover-border);
+}
+.map-panel-btn.active {
+    background: var(--map-ctrl-active-bg);
+    border-color: var(--map-ctrl-active-border);
+}
+.map-panel-btn.active:hover {
+    background: var(--map-ctrl-active-hover-bg);
+    border-color: var(--map-ctrl-active-hover-border);
+}
+.map-panel-btn:disabled {
+    opacity: var(--map-ctrl-disabled-opacity);
+    cursor: not-allowed;
+}
+.map-panel-btn:disabled:hover {
+    background: var(--map-ctrl-inactive-bg);
+    transform: none;
+}
+.map-panel-btn.danger {
+    background: var(--map-ctrl-danger-bg);
+    border-color: var(--map-ctrl-danger-border);
+}
+.map-panel-btn.danger:hover {
+    background: var(--map-ctrl-danger-hover-bg);
+}
+
+/* --- Panels --- */
+.map-panel {
+    position: absolute;
+    top: 10px;
+    right: 56px;
+    width: 280px;
+    max-width: calc(100vw - 76px);
+    max-height: calc(100vh - 40px);
+    background: var(--map-ctrl-panel-bg);
+    border: 1px solid var(--map-ctrl-panel-border);
+    border-radius: 12px;
+    padding: 16px;
+    z-index: 999;
+    overflow-y: auto;
+    color: var(--map-ctrl-text);
+    display: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.map-panel-header {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--map-ctrl-text);
+    text-align: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--map-ctrl-panel-border);
+}
+
+/* --- Toggle Rows (overlay checkboxes) --- */
+.map-toggle-row {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    border: 1px solid var(--map-ctrl-panel-border);
+    background: var(--map-ctrl-inactive-bg);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--map-ctrl-text);
+    text-align: left;
+}
+.map-toggle-row:hover {
+    background: var(--map-ctrl-hover-bg);
+    border-color: var(--map-ctrl-hover-border);
+}
+.map-toggle-row.active {
+    background: var(--map-ctrl-active-bg);
+    border-color: var(--map-ctrl-active-border);
+}
+.map-toggle-row.active:hover {
+    background: var(--map-ctrl-active-hover-bg);
+}
+
+/* --- Range Sliders inside map panels --- */
+.map-panel input[type="range"] {
+    accent-color: var(--theme-accent);
 }
 
 /* ==================== Base Styles ==================== */
@@ -271,36 +445,26 @@ body.dark-mode .rounded {
     border: 1px solid var(--theme-border);
 }
 
-/* ==================== Buttons (Dark Mode) ==================== */
-body.dark-mode .btn-outline-primary {
-    border-color: var(--theme-btn-outline-border);
-    color: var(--theme-btn-outline-text);
+/* ==================== Buttons (Hue-Aware) ==================== */
+.btn-outline-primary {
+    border-color: var(--theme-accent);
+    color: var(--theme-accent);
 }
 
-body.dark-mode .btn-outline-primary:hover {
-    background-color: var(--theme-btn-outline-hover-bg);
-    color: var(--theme-btn-outline-hover-text);
+.btn-outline-primary:hover {
+    background-color: var(--theme-accent);
+    color: var(--theme-accent-contrast);
 }
 
-body.dark-mode .btn-outline-primary.btn-sm {
-    border-color: var(--theme-btn-outline-border);
-    color: var(--theme-btn-outline-text);
+.btn-primary {
+    background-color: var(--theme-accent);
+    border-color: var(--theme-accent);
+    color: var(--theme-accent-contrast);
 }
 
-body.dark-mode .btn-outline-primary.btn-sm:hover {
-    background-color: var(--theme-btn-outline-hover-bg);
-    color: var(--theme-btn-outline-hover-text);
-}
-
-body.dark-mode .btn-primary {
-    background-color: var(--theme-btn-primary-bg);
-    border-color: var(--theme-btn-primary-border);
-    color: var(--theme-btn-primary-text);
-}
-
-body.dark-mode .btn-primary:hover {
-    background-color: var(--theme-btn-primary-hover-bg);
-    border-color: var(--theme-btn-primary-hover-border);
+.btn-primary:hover {
+    background-color: var(--theme-accent-hover);
+    border-color: var(--theme-accent-hover);
 }
 
 /* ==================== Code ==================== */
@@ -376,7 +540,7 @@ tr.format-unknown td {
 /* File row hover (accent-themed, works in both light and dark via variables) */
 table tbody tr:not(.table-secondary):not(.format-unknown):hover {
     background-color: var(--theme-accent-bg-hover) !important;
-    outline: 2px solid var(--theme-accent-outline) !important;
+    outline: 2px solid var(--theme-accent) !important;
     outline-offset: -2px !important;
     box-shadow: 0 0 10px var(--theme-accent-glow) !important;
 }
@@ -484,7 +648,7 @@ table tbody tr:not(.table-secondary):not(.format-unknown):hover td {
 }
 
 .overview-value-na {
-    color: #dc3545 !important; /* Bootstrap red for zero/N/A values */
+    color: var(--theme-danger) !important;
 }
 
 /* ==================== noUiSlider Custom Styling ==================== */
@@ -615,7 +779,7 @@ table tbody tr:not(.table-secondary):not(.format-unknown):hover td {
     z-index: 1;
 }
 
-/* Leaflet custom controls (matching DASHAPP) */
+/* Leaflet custom controls container */
 .custom-map-controls {
     position: absolute;
     top: 10px;
@@ -623,30 +787,8 @@ table tbody tr:not(.table-secondary):not(.format-unknown):hover td {
     z-index: 1000;
     display: flex;
     flex-direction: column;
+    align-items: flex-end;
     gap: 8px;
-}
-
-.map-control-btn {
-    width: 36px;
-    height: 36px;
-    border: 1px solid rgba(255,255,255,1.0);
-    background: rgba(0, 0, 0, 0.8);
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    color: white;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.map-control-btn:hover {
-    background: rgba(255, 255, 255, 0.8);
-    border-color: rgba(0,0,0,1.0);
-    color: black;
-    transform: scale(1.05);
 }
 
 /* ==================== Map Style Buttons ==================== */
@@ -668,7 +810,7 @@ table tbody tr:not(.table-secondary):not(.format-unknown):hover td {
     background: var(--theme-accent-bg-hover) !important;
     border-color: var(--theme-accent-hover) !important;
     color: var(--theme-accent-hover) !important;
-    outline: 2px solid var(--theme-accent-outline) !important;
+    outline: 2px solid var(--theme-accent) !important;
     outline-offset: -2px !important;
     transform: scale(1.05);
     box-shadow: 0 0 10px var(--theme-accent-glow) !important;
@@ -680,17 +822,6 @@ table tbody tr:not(.table-secondary):not(.format-unknown):hover td {
     filter: grayscale(50%);
 }
 
-/* Back to Files button hover */
-#back-to-files-btn:hover {
-    background: var(--theme-accent-bg-hover) !important;
-    border-color: var(--theme-accent-hover) !important;
-    color: var(--theme-accent-hover) !important;
-    outline: 2px solid var(--theme-accent-outline) !important;
-    outline-offset: -2px !important;
-    transform: scale(1.05);
-    box-shadow: 0 0 10px var(--theme-accent-glow) !important;
-}
-
 /* ==================== Drop Zone Styling ==================== */
 body.drag-over::after {
     content: '';
@@ -699,7 +830,7 @@ body.drag-over::after {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(13, 110, 253, 0.1);
+    background: var(--theme-accent-glow);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     z-index: 9998;
@@ -712,8 +843,8 @@ body.drag-over::before {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(13, 110, 253, 0.95);
-    color: white;
+    background: var(--theme-accent);
+    color: var(--theme-accent-contrast);
     padding: 30px 60px;
     border-radius: 20px;
     font-size: 24px;
@@ -750,8 +881,9 @@ body.drag-over::before {
 
 /* ==================== Time Range Slider ==================== */
 #time-range-slider {
-    width: calc(100% - 40px); /* Add padding on edges */
-    margin: 0 20px 55px 20px; /* Edge padding and bottom space for pips */
+    /* Left/right margins match canvas-chart.js CHART_MARGINS (left: 60, right: 40) so ticks align with chart X-axis */
+    width: calc(100% - 100px);
+    margin: 0 40px 55px 60px;
 }
 
 /* ==================== Responsive Design ==================== */
@@ -796,11 +928,11 @@ body.drag-over::before {
 /* ==================== Version Badge - Retro Console Style ==================== */
 .version-badge {
     font-family: 'Courier New', Courier, monospace;
-    background: #1a1a1a;
-    color: #00ff00;
+    background: var(--theme-bg-deep);
+    color: var(--theme-accent);
     padding: 4px 12px;
     border-radius: 4px;
-    border: 1px solid #333;
+    border: 1px solid var(--theme-border);
     font-size: 0.75rem;
     letter-spacing: 0.5px;
     font-weight: normal;
@@ -892,10 +1024,10 @@ body.drag-over::before {
     bottom: 0;
     width: 100%;
     background-color: var(--theme-footer-bg);
-    color: var(--theme-footer-text);
+    color: var(--theme-text);
     padding: 16px 0;
     margin-top: 32px;
-    border-top: 2px solid var(--theme-footer-border);
+    border-top: 2px solid var(--theme-border);
     font-size: 0.875rem;
 }
 
@@ -990,7 +1122,7 @@ body.drag-over::before {
     font-size: 0.8rem;
     padding: 1px 4px;
     background: var(--theme-diagnostic-code-bg);
-    color: var(--theme-diagnostic-code-text);
+    color: var(--theme-code-text);
     border-radius: 3px;
 }
 

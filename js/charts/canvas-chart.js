@@ -10,33 +10,50 @@ window.CanvasDataAccessors = {
 };
 
 window.EUCCanvasChart = function(containerId, options = {}) {
+    // Named constants
+    const CHART_MARGINS = { left: 60, right: 40, top: 30, bottom: 40 };
+    const MAX_RENDER_POINTS = 5000;
+    const DEFAULT_CHART_HEIGHT = 200;
+    const Y_AXIS_TICK_COUNT = 4;
+    const X_AXIS_LABEL_COUNT = 14;
+    const OVERLAY_ICON_SIZE = 16;
+    const OVERLAY_TOP_OFFSET = -15;
+    const OVERLAY_BOTTOM_OFFSET = 12;
+    const DEFAULT_CONTAINER_WIDTH = 800;
+    const GAP_DASH_PATTERN = [2, 2];
+
     let canvas, ctx;
     let targetCanvas, targetCtx;
     let chartData = null;
-    let chartWidth = 0, chartHeight = 200;
-    let marginLeft = 60, marginRight = 40, marginTop = 30, marginBottom = 40;  // Match PLOTLY_GRAPH_INTERNAL_MARGIN
+    let chartWidth = 0, chartHeight = DEFAULT_CHART_HEIGHT;
+    let marginLeft = CHART_MARGINS.left, marginRight = CHART_MARGINS.right;
+    let marginTop = CHART_MARGINS.top, marginBottom = CHART_MARGINS.bottom;
     let mouseInside = false;
     let selectedIndex = -1;
     let onHoverCallback = null;
     let onHoverOutCallback = null;
-    
+
     // Overlay state management (dynamic based on chart data)
     let overlayState = {};
     let overlayControls = [];
     let overlayControlsContainer = null;
-    
+
     // Chart type configuration - match Plotly dual Y-axis structure
     let chartType = options.chartType || 'default';
     let leftAxisTitle = options.leftAxisTitle || '';
     let rightAxisTitle = options.rightAxisTitle || '';
     let hasSecondaryY = options.hasSecondaryY || false;
-    
+
+    // Trim preview state (set by time range slider drag)
+    let trimPreviewStart = null; // ms timestamp or null
+    let trimPreviewEnd = null;   // ms timestamp or null
+
     // Viewport optimization with level-of-detail rendering
     let viewportStart = 0;
     let viewportEnd = -1;
     let publicAPI = null; // Set at bottom, referenced by init() for sync registration
     let resizeObserver = null; // Stored for cleanup in destroy()
-    let maxRenderPoints = 5000;  // Maximum points to render at once
+    let maxRenderPoints = MAX_RENDER_POINTS;
     let isLargeDataset = false;
 
     // Batched redraw optimization using requestAnimationFrame
@@ -753,7 +770,7 @@ window.EUCCanvasChart = function(containerId, options = {}) {
         // Final fallback values
         if (containerWidth === 0) {
             console.warn(`[CANVAS] ${containerId} has zero width, using fallback`);
-            containerWidth = 800; // Reasonable default
+            containerWidth = DEFAULT_CONTAINER_WIDTH; // Reasonable default
         }
         if (containerHeight === 0) {
             console.warn(`[CANVAS] ${containerId} has zero height, using fallback`);
@@ -825,6 +842,9 @@ window.EUCCanvasChart = function(containerId, options = {}) {
         
         // Draw overlay markers at Y=0
         drawOverlayMarkers();
+
+        // Draw trim preview shading (if time range slider is being dragged)
+        drawTrimPreview();
 
         // Copy to display canvas
         targetCtx.drawImage(canvas, 0, 0);
@@ -992,88 +1012,75 @@ window.EUCCanvasChart = function(containerId, options = {}) {
         ctx.restore();
     }
     
+    /**
+     * Calculate axis range for a set of series.
+     * Handles percentage charts (0-100), orientation charts (symmetric zero-centered),
+     * and dynamic scaling.
+     * @param {Array} seriesArray - Array of series objects with .data arrays
+     * @param {boolean} applySymmetric - Whether to apply symmetric scaling for orientation charts
+     * @returns {{ min: number, max: number, range: number }}
+     */
+    function calculateAxisRange(seriesArray, applySymmetric = true) {
+        const isPercentageChart = seriesArray.some(s =>
+            s.name === 'PWM %' || s.name.includes('Battery') || containerId.includes('battery'));
+
+        if (isPercentageChart) return { min: 0, max: 100, range: 100 };
+
+        let min = Infinity, max = -Infinity, hasValues = false;
+        for (let s = 0; s < seriesArray.length; s++) {
+            const seriesData = seriesArray[s].data;
+            if (!seriesData) continue;
+            for (let i = 0; i < seriesData.length; i++) {
+                const value = window.CanvasDataAccessors._n(seriesData[i]);
+                if (value !== null) {
+                    hasValues = true;
+                    if (value < min) min = value;
+                    if (value > max) max = value;
+                }
+            }
+        }
+        if (!hasValues) return { min: 0, max: 1, range: 1 };
+
+        if (applySymmetric && chartType === 'orientation') {
+            const absMax = Math.max(Math.abs(min), Math.abs(max));
+            min = -absMax;
+            max = absMax;
+        }
+        return { min, max, range: max - min || 1 };
+    }
+
     function drawYAxisLabels() {
         if (!chartData || !chartData.series || chartData.series.length === 0) return;
-        
+
         ctx.fillStyle = config.axisLabelColor;
         ctx.font = `${config.fontSize}px ${config.fontFamily}`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
-        
+
         const dataHeight = chartHeight - marginTop - marginBottom;
-        
+
         // Calculate value ranges for left and right axes
         const leftSeries = chartData.series.filter(s => !s.secondary_y);
         const rightSeries = chartData.series.filter(s => s.secondary_y);
-        
+
         // Draw left Y-axis labels
         if (leftSeries.length > 0) {
-            const leftValues = leftSeries.flatMap(s => (s.data || []).filter(v => window.CanvasDataAccessors._n(v) !== null));
-            if (leftValues.length > 0) {
-                let leftMin, leftMax, leftRange;
-
-                // Check if this chart contains percentage-based data (PWM)
-                const isPercentageChart = leftSeries.some(s => s.name === 'PWM %' ||
-                                                               s.name.includes('Battery') || containerId.includes('battery'));
-
-                if (isPercentageChart) {
-                    // Force 0-100% scale for PWM and Battery
-                    leftMin = 0;
-                    leftMax = 100;
-                    leftRange = 100;
-                } else {
-                    // Use dynamic scaling for other charts
-                    leftMin = Math.min(...leftValues);
-                    leftMax = Math.max(...leftValues);
-
-                    // Symmetric zero-centered scaling for angle charts (Tilt & Roll)
-                    if (chartType === 'orientation') {
-                        const absMax = Math.max(Math.abs(leftMin), Math.abs(leftMax));
-                        leftMin = -absMax;
-                        leftMax = absMax;
-                    }
-
-                    leftRange = leftMax - leftMin || 1;
-                }
-                
-                // Draw 5 tick labels
-                for (let i = 0; i <= 4; i++) {
-                    const value = leftMin + (leftRange * i / 4);
-                    const y = marginTop + dataHeight - (i * dataHeight / 4);
-                    ctx.fillText(value.toFixed(1), marginLeft - 5, y);
-                }
+            const left = calculateAxisRange(leftSeries);
+            for (let i = 0; i <= Y_AXIS_TICK_COUNT; i++) {
+                const value = left.min + (left.range * i / Y_AXIS_TICK_COUNT);
+                const y = marginTop + dataHeight - (i * dataHeight / Y_AXIS_TICK_COUNT);
+                ctx.fillText(value.toFixed(1), marginLeft - 5, y);
             }
         }
-        
+
         // Draw right Y-axis labels if secondary axis exists
         if (rightSeries.length > 0 && hasSecondaryY) {
             ctx.textAlign = 'left';
-            const rightValues = rightSeries.flatMap(s => (s.data || []).filter(v => window.CanvasDataAccessors._n(v) !== null));
-            if (rightValues.length > 0) {
-                let rightMin, rightMax, rightRange;
-                
-                // Check if this chart contains percentage-based data (PWM)
-                const isPercentageChart = rightSeries.some(s => s.name === 'PWM %' ||
-                                                                s.name.includes('Battery') || containerId.includes('battery'));
-
-                if (isPercentageChart) {
-                    // Force 0-100% scale for PWM and Battery
-                    rightMin = 0;
-                    rightMax = 100;
-                    rightRange = 100;
-                } else {
-                    // Use dynamic scaling for other charts
-                    rightMin = Math.min(...rightValues);
-                    rightMax = Math.max(...rightValues);
-                    rightRange = rightMax - rightMin || 1;
-                }
-                
-                // Draw 5 tick labels
-                for (let i = 0; i <= 4; i++) {
-                    const value = rightMin + (rightRange * i / 4);
-                    const y = marginTop + dataHeight - (i * dataHeight / 4);
-                    ctx.fillText(value.toFixed(1), chartWidth - marginRight + 5, y);
-                }
+            const right = calculateAxisRange(rightSeries, false);
+            for (let i = 0; i <= Y_AXIS_TICK_COUNT; i++) {
+                const value = right.min + (right.range * i / Y_AXIS_TICK_COUNT);
+                const y = marginTop + dataHeight - (i * dataHeight / Y_AXIS_TICK_COUNT);
+                ctx.fillText(value.toFixed(1), chartWidth - marginRight + 5, y);
             }
         }
     }
@@ -1086,7 +1093,7 @@ window.EUCCanvasChart = function(containerId, options = {}) {
         ctx.textAlign = 'center';
 
         const dataWidth = chartWidth - marginLeft - marginRight;
-        const numLabels = 14; // Show 14 labels across the chart
+        const numLabels = X_AXIS_LABEL_COUNT;
 
         // LINEAR TIME SCALE: Calculate evenly spaced time intervals
         const minTimestamp = new Date(chartData.datetime[0]).getTime();
@@ -1170,91 +1177,11 @@ window.EUCCanvasChart = function(containerId, options = {}) {
             console.log(`[CANVAS] ${containerId} left series: ${leftSeries.length}, right series: ${rightSeries.length}`);
         }
         
-        let leftMin = 0, leftMax = 1, leftPpy = dataHeight;
-        let rightMin = 0, rightMax = 1, rightPpy = dataHeight;
-        
-        // Calculate left axis range
-        if (leftSeries.length > 0) {
-            // Check if this chart contains percentage-based data (PWM)
-            const isPercentageChart = leftSeries.some(s => s.name === 'PWM %' ||
-                                                           s.name.includes('Battery') || containerId.includes('battery'));
-
-            if (isPercentageChart) {
-                // Force 0-100% scale for PWM and Battery
-                leftMin = 0;
-                leftMax = 100;
-            } else {
-                // Use dynamic scaling - optimized single-pass min/max (PERFORMANCE FIX)
-                leftMin = Infinity;
-                leftMax = -Infinity;
-                let hasValues = false;
-
-                for (let s = 0; s < leftSeries.length; s++) {
-                    const seriesData = leftSeries[s].data;
-                    if (!seriesData) continue;
-                    for (let i = 0; i < seriesData.length; i++) {
-                        const value = window.CanvasDataAccessors._n(seriesData[i]);
-                        if (value !== null) {
-                            hasValues = true;
-                            if (value < leftMin) leftMin = value;
-                            if (value > leftMax) leftMax = value;
-                        }
-                    }
-                }
-
-                if (!hasValues) {
-                    leftMin = 0;
-                    leftMax = 1;
-                }
-
-                // Symmetric zero-centered scaling for angle charts (Tilt & Roll)
-                if (chartType === 'orientation') {
-                    const absMax = Math.max(Math.abs(leftMin), Math.abs(leftMax));
-                    leftMin = -absMax;
-                    leftMax = absMax;
-                }
-            }
-            const leftRange = leftMax - leftMin || 1;
-            leftPpy = dataHeight / leftRange;
-        }
-
-        // Calculate right axis range
-        if (rightSeries.length > 0) {
-            // Check if this chart contains percentage-based data (PWM)
-            const isPercentageChart = rightSeries.some(s => s.name === 'PWM %' ||
-                                                            s.name.includes('Battery') || containerId.includes('battery'));
-
-            if (isPercentageChart) {
-                // Force 0-100% scale for PWM and Battery
-                rightMin = 0;
-                rightMax = 100;
-            } else {
-                // Use dynamic scaling - optimized single-pass min/max (PERFORMANCE FIX)
-                rightMin = Infinity;
-                rightMax = -Infinity;
-                let hasValues = false;
-
-                for (let s = 0; s < rightSeries.length; s++) {
-                    const seriesData = rightSeries[s].data;
-                    if (!seriesData) continue;
-                    for (let i = 0; i < seriesData.length; i++) {
-                        const value = window.CanvasDataAccessors._n(seriesData[i]);
-                        if (value !== null) {
-                            hasValues = true;
-                            if (value < rightMin) rightMin = value;
-                            if (value > rightMax) rightMax = value;
-                        }
-                    }
-                }
-
-                if (!hasValues) {
-                    rightMin = 0;
-                    rightMax = 1;
-                }
-            }
-            const rightRange = rightMax - rightMin || 1;
-            rightPpy = dataHeight / rightRange;
-        }
+        // Calculate axis ranges using shared helper
+        const left = leftSeries.length > 0 ? calculateAxisRange(leftSeries) : { min: 0, max: 1, range: 1 };
+        const right = rightSeries.length > 0 ? calculateAxisRange(rightSeries, false) : { min: 0, max: 1, range: 1 };
+        const leftMin = left.min, leftPpy = dataHeight / left.range;
+        const rightMin = right.min, rightPpy = dataHeight / right.range;
         
         // Draw each series with appropriate scaling
         chartData.series.forEach(series => {
@@ -1341,7 +1268,7 @@ window.EUCCanvasChart = function(containerId, options = {}) {
 
         // Draw all gap segments in one batch (PERFORMANCE FIX)
         if (gapPaths.length > 0) {
-            ctx.setLineDash([2, 2]);
+            ctx.setLineDash(GAP_DASH_PATTERN);
             ctx.strokeStyle = config.gapSegmentColor;
             for (let i = 0; i < gapPaths.length; i++) {
                 ctx.stroke(gapPaths[i]);
@@ -1410,8 +1337,8 @@ window.EUCCanvasChart = function(containerId, options = {}) {
         const dataLength = chartData.datetime.length;
         
         // Define positioning: MAX at top, MIN at bottom
-        const topY = marginTop - 15; // Push MAX icons above chart area
-        const bottomY = chartHeight - marginBottom + 12; // Push MIN icons below chart area (50% of previous distance)
+        const topY = marginTop + OVERLAY_TOP_OFFSET; // Push MAX icons above chart area
+        const bottomY = chartHeight - marginBottom + OVERLAY_BOTTOM_OFFSET; // Push MIN icons below chart area
         
         // Find max values and their indices
         const maxValues = findMaxValues();
@@ -1616,7 +1543,7 @@ window.EUCCanvasChart = function(containerId, options = {}) {
             );
         }
         
-        const iconSize = 16;    // Icon size to match GPS map
+        const iconSize = OVERLAY_ICON_SIZE;
         const iconBgSize = 12;  // Background circle size (24px diameter like GPS map)
         
         // Use consistent colors from global config or fallback
@@ -1647,6 +1574,44 @@ window.EUCCanvasChart = function(containerId, options = {}) {
         ctx.restore();
     }
     
+    /**
+     * Draw semi-transparent overlay on areas outside the trim range.
+     * Called during draw() so it's part of the offscreen canvas render.
+     */
+    function drawTrimPreview() {
+        if (trimPreviewStart === null || trimPreviewEnd === null) return;
+        if (!chartData || !chartData.datetime || chartData.datetime.length === 0) return;
+
+        const dataWidth = chartWidth - marginLeft - marginRight;
+        const dataHeight = chartHeight - marginTop - marginBottom;
+        const minTs = new Date(chartData.datetime[0]).getTime();
+        const maxTs = new Date(chartData.datetime[chartData.datetime.length - 1]).getTime();
+        const timeRange = maxTs - minTs || 1;
+
+        // Snap trim edges to chart data edges when within 1s (slider truncates ms to whole seconds)
+        const effectiveStart = Math.abs(trimPreviewStart - minTs) <= 1000 ? minTs : trimPreviewStart;
+        const effectiveEnd = Math.abs(trimPreviewEnd - maxTs) <= 1000 ? maxTs : trimPreviewEnd;
+
+        // Convert trim timestamps to X pixel positions (clamped to plot area)
+        const trimLeftX = marginLeft + Math.max(0, (effectiveStart - minTs) / timeRange) * dataWidth;
+        const trimRightX = marginLeft + Math.min(1, (effectiveEnd - minTs) / timeRange) * dataWidth;
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+
+        // Left shaded region (before trim-in)
+        if (trimLeftX > marginLeft + 1) {
+            ctx.fillRect(marginLeft, marginTop, trimLeftX - marginLeft, dataHeight);
+        }
+
+        // Right shaded region (after trim-out)
+        if (trimRightX < marginLeft + dataWidth - 1) {
+            ctx.fillRect(trimRightX, marginTop, (marginLeft + dataWidth) - trimRightX, dataHeight);
+        }
+
+        ctx.restore();
+    }
+
     function drawSelection(index) {
         if (!chartData || index < 0 || index >= chartData.datetime.length) return;
 
@@ -1977,7 +1942,19 @@ window.EUCCanvasChart = function(containerId, options = {}) {
         redraw: function() {
             draw();
         },
-        
+
+        setTrimPreview: function(startMs, endMs) {
+            trimPreviewStart = startMs;
+            trimPreviewEnd = endMs;
+            draw();
+        },
+
+        clearTrimPreview: function() {
+            trimPreviewStart = null;
+            trimPreviewEnd = null;
+            draw();
+        },
+
         destroy: function() {
             window.removeEventListener('resize', onWindowResize);
             if (targetCanvas && targetCanvas.parentNode) {

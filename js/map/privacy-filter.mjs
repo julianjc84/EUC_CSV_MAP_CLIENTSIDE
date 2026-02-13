@@ -171,66 +171,27 @@ export function createPrivacyPanelContent(privacyState, reloadRoute) {
     const container = document.createElement('div');
 
     // Panel header
-    const header = L.DomUtil.create('div', 'panel-header', container);
-    header.innerHTML = '👁️ Privacy Mode';
-    header.style.cssText = `
-        font-size: 14px;
-        font-weight: bold;
-        color: white;
-        text-align: center;
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
-    `;
+    const header = L.DomUtil.create('div', 'map-panel-header', container);
+    header.innerHTML = '\uD83D\uDC41\uFE0F Privacy Mode';
 
     // Privacy mode toggle
-    const privacyToggleContainer = L.DomUtil.create('div', 'privacy-toggle-container', container);
-    privacyToggleContainer.style.cssText = `
-        width: 100%;
-        padding: 7px;
-        margin-bottom: 12px;
-        background: ${privacyState.enabled ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
-        border: 2px solid ${privacyState.enabled ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)'};
-        border-radius: 6px;
-        color: white;
-        font-size: 13px;
-        font-weight: bold;
-        cursor: pointer;
-        text-align: left;
-        transition: all 0.2s ease;
-    `;
+    const privacyToggleContainer = L.DomUtil.create('div', 'map-toggle-row', container);
+    privacyToggleContainer.style.marginBottom = '12px';
+    if (privacyState.enabled) privacyToggleContainer.classList.add('active');
 
     const privacyToggleSwitch = L.DomUtil.create('input', '', privacyToggleContainer);
     privacyToggleSwitch.type = 'checkbox';
     privacyToggleSwitch.checked = privacyState.enabled;
-    privacyToggleSwitch.style.cssText = 'display: none;';
+    privacyToggleSwitch.style.display = 'none';
 
     const privacyToggleLabel = L.DomUtil.create('span', '', privacyToggleContainer);
-    privacyToggleLabel.innerHTML = '👁️ Enable Privacy Mode';
-
-    const updatePrivacyToggleVisuals = () => {
-        const isChecked = privacyToggleSwitch.checked;
-        privacyToggleContainer.style.background = isChecked ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)';
-        privacyToggleContainer.style.borderColor = isChecked ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)';
-    };
-
-    privacyToggleContainer.addEventListener('mouseenter', () => {
-        const isCurrentlyActive = privacyToggleContainer.style.borderColor.includes('80, 0.8');
-        if (!isCurrentlyActive) {
-            privacyToggleContainer.style.background = 'rgba(255, 255, 255, 0.2)';
-            privacyToggleContainer.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-        }
-    });
-
-    privacyToggleContainer.addEventListener('mouseleave', () => {
-        updatePrivacyToggleVisuals();
-    });
+    privacyToggleLabel.innerHTML = '\uD83D\uDC41\uFE0F Enable Privacy Mode';
 
     L.DomEvent.on(privacyToggleContainer, 'click', function(e) {
         L.DomEvent.stopPropagation(e);
         privacyToggleSwitch.checked = !privacyToggleSwitch.checked;
         privacyState.enabled = privacyToggleSwitch.checked;
-        updatePrivacyToggleVisuals();
+        privacyToggleContainer.classList.toggle('active', privacyState.enabled);
         console.log(`[PRIVACY FILTER] Privacy mode ${privacyState.enabled ? 'enabled' : 'disabled'}`);
         reloadRoute(); // Reload route with privacy filter applied
     });
@@ -241,110 +202,49 @@ export function createPrivacyPanelContent(privacyState, reloadRoute) {
     zoneSelectionLabel.style.cssText = `
         font-size: 12px;
         font-weight: bold;
-        color: rgba(255,255,255,0.8);
+        color: var(--map-ctrl-text);
         margin-bottom: 8px;
     `;
 
     // Hide start checkbox
-    const hideStartContainer = L.DomUtil.create('div', '', container);
-    hideStartContainer.style.cssText = `
-        width: 100%;
-        padding: 7px;
-        margin-bottom: 4px;
-        background: ${privacyState.hideStart ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
-        border: 2px solid ${privacyState.hideStart ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)'};
-        border-radius: 6px;
-        color: white;
-        font-size: 13px;
-        font-weight: bold;
-        cursor: pointer;
-        text-align: left;
-        transition: all 0.2s ease;
-    `;
+    const hideStartContainer = L.DomUtil.create('div', 'map-toggle-row', container);
+    if (privacyState.hideStart) hideStartContainer.classList.add('active');
 
     const hideStartCheckbox = L.DomUtil.create('input', '', hideStartContainer);
     hideStartCheckbox.type = 'checkbox';
     hideStartCheckbox.checked = privacyState.hideStart;
-    hideStartCheckbox.style.cssText = 'display: none;';
+    hideStartCheckbox.style.display = 'none';
 
     const hideStartLabel = L.DomUtil.create('span', '', hideStartContainer);
-    hideStartLabel.innerHTML = '🏠 Hide Start Location';
-
-    const updateStartVisuals = () => {
-        const isChecked = hideStartCheckbox.checked;
-        hideStartContainer.style.background = isChecked ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)';
-        hideStartContainer.style.borderColor = isChecked ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)';
-    };
-
-    hideStartContainer.addEventListener('mouseenter', () => {
-        const isCurrentlyActive = hideStartContainer.style.borderColor.includes('80, 0.8');
-        if (!isCurrentlyActive) {
-            hideStartContainer.style.background = 'rgba(255, 255, 255, 0.2)';
-            hideStartContainer.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-        }
-    });
-
-    hideStartContainer.addEventListener('mouseleave', () => {
-        updateStartVisuals();
-    });
+    hideStartLabel.innerHTML = '\uD83C\uDFE0 Hide Start Location';
 
     L.DomEvent.on(hideStartContainer, 'click', function(e) {
         L.DomEvent.stopPropagation(e);
         hideStartCheckbox.checked = !hideStartCheckbox.checked;
         privacyState.hideStart = hideStartCheckbox.checked;
-        updateStartVisuals();
+        hideStartContainer.classList.toggle('active', privacyState.hideStart);
         console.log(`[PRIVACY FILTER] Hide start: ${privacyState.hideStart}`);
         if (privacyState.enabled) reloadRoute();
     });
 
     // Hide end checkbox
-    const hideEndContainer = L.DomUtil.create('div', '', container);
-    hideEndContainer.style.cssText = `
-        width: 100%;
-        padding: 7px;
-        margin-bottom: 12px;
-        background: ${privacyState.hideEnd ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
-        border: 2px solid ${privacyState.hideEnd ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)'};
-        border-radius: 6px;
-        color: white;
-        font-size: 13px;
-        font-weight: bold;
-        cursor: pointer;
-        text-align: left;
-        transition: all 0.2s ease;
-    `;
+    const hideEndContainer = L.DomUtil.create('div', 'map-toggle-row', container);
+    hideEndContainer.style.marginBottom = '12px';
+    if (privacyState.hideEnd) hideEndContainer.classList.add('active');
 
     const hideEndCheckbox = L.DomUtil.create('input', '', hideEndContainer);
     hideEndCheckbox.type = 'checkbox';
     hideEndCheckbox.checked = privacyState.hideEnd;
-    hideEndCheckbox.style.cssText = 'display: none;';
+    hideEndCheckbox.style.display = 'none';
 
     const hideEndLabel = L.DomUtil.create('span', '', hideEndContainer);
-    hideEndLabel.innerHTML = '🏁 Hide End Location';
-
-    const updateEndVisuals = () => {
-        const isChecked = hideEndCheckbox.checked;
-        hideEndContainer.style.background = isChecked ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)';
-        hideEndContainer.style.borderColor = isChecked ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)';
-    };
-
-    hideEndContainer.addEventListener('mouseenter', () => {
-        const isCurrentlyActive = hideEndContainer.style.borderColor.includes('80, 0.8');
-        if (!isCurrentlyActive) {
-            hideEndContainer.style.background = 'rgba(255, 255, 255, 0.2)';
-            hideEndContainer.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-        }
-    });
-
-    hideEndContainer.addEventListener('mouseleave', () => {
-        updateEndVisuals();
-    });
+    hideEndLabel.innerHTML = '\uD83C\uDFC1 Hide End Location';
 
     L.DomEvent.on(hideEndContainer, 'click', function(e) {
         L.DomEvent.stopPropagation(e);
         hideEndCheckbox.checked = !hideEndCheckbox.checked;
         privacyState.hideEnd = hideEndCheckbox.checked;
-        updateEndVisuals();
+        hideEndContainer.classList.toggle('active', privacyState.hideEnd);
         console.log(`[PRIVACY FILTER] Hide end: ${privacyState.hideEnd}`);
         if (privacyState.enabled) reloadRoute();
     });
@@ -355,7 +255,7 @@ export function createPrivacyPanelContent(privacyState, reloadRoute) {
     zoneSizeLabel.style.cssText = `
         font-size: 12px;
         font-weight: bold;
-        color: rgba(255,255,255,0.8);
+        color: var(--map-ctrl-text);
         margin-bottom: 8px;
     `;
 
@@ -391,10 +291,10 @@ export function createPrivacyPanelContent(privacyState, reloadRoute) {
     infoText.innerHTML = 'Privacy mode hides GPS points from the start and/or end of your route to protect your home location.';
     infoText.style.cssText = `
         font-size: 11px;
-        color: rgba(255,255,255,0.6);
+        color: var(--map-ctrl-text-secondary);
         margin-top: 12px;
         padding: 8px;
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--map-ctrl-info-bg);
         border-radius: 6px;
         line-height: 1.4;
     `;

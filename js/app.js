@@ -29,6 +29,11 @@ function initBootstrapTooltips(container) {
     });
 }
 
+// Named timeout constants
+const CHART_INIT_DELAY_MS = 200;
+const MAP_MODULE_LOAD_DELAY_MS = 300;
+const MAP_READY_CALLBACK_DELAY_MS = 50;
+
 // Global state
 let currentData = null;
 let originalData = null;
@@ -89,119 +94,94 @@ function getContrastText(h, s, l) {
 }
 
 /**
- * Apply theme hue to all CSS variables (accent, footer, charts). Null removes all overrides.
- * @param {number|null} hue - Hue value (0-360) or null to reset
+ * Redraw all registered canvas charts to pick up new CSS theme variables.
  */
-function applyThemeHue(hue) {
-    const style = document.body.style;
-    const allVars = [
-        // Accent
-        '--theme-accent', '--theme-accent-hover', '--theme-accent-outline',
-        '--theme-accent-bg-hover', '--theme-accent-glow',
-        '--theme-btn-primary-bg', '--theme-btn-primary-border', '--theme-btn-primary-text',
-        '--theme-btn-primary-hover-bg', '--theme-btn-primary-hover-border',
-        '--theme-btn-outline-border', '--theme-btn-outline-text',
-        '--theme-btn-outline-hover-bg', '--theme-btn-outline-hover-text',
-        '--theme-tooltip-border', '--theme-tooltip-shadow', '--theme-tooltip-arrow',
-        '--theme-code-text', '--theme-table-secondary-strong',
-        // Footer
-        '--theme-footer-accent', '--theme-footer-link', '--theme-footer-link-hover',
-        // Charts
-        '--chart-grid', '--chart-axis-line', '--chart-axis-label', '--chart-axis-title',
-        '--chart-hover-line', '--chart-empty-text', '--chart-gap-segment', '--chart-annotation-border'
-    ];
-
-    if (hue === null) {
-        allVars.forEach(v => style.removeProperty(v));
-        if (window.eucChartSync && window.eucChartSync.charts) {
-            Object.values(window.eucChartSync.charts).forEach(chart => {
-                if (chart && typeof chart.redraw === 'function') chart.redraw();
-            });
-        }
-        return;
-    }
-
-    const H = hue;
-    const isDark = document.body.classList.contains('dark-mode');
-
-    if (isDark) {
-        const contrast = getContrastText(H, 100, 50);
-        // Accent
-        style.setProperty('--theme-accent', `hsl(${H}, 100%, 50%)`);
-        style.setProperty('--theme-accent-hover', `hsl(${H}, 100%, 40%)`);
-        style.setProperty('--theme-accent-outline', `hsl(${H}, 100%, 50%)`);
-        style.setProperty('--theme-accent-bg-hover', `hsl(${H}, 37%, 16%)`);
-        style.setProperty('--theme-accent-glow', `hsla(${H}, 100%, 50%, 0.3)`);
-        style.setProperty('--theme-btn-primary-bg', `hsl(${H}, 100%, 50%)`);
-        style.setProperty('--theme-btn-primary-border', `hsl(${H}, 100%, 50%)`);
-        style.setProperty('--theme-btn-primary-text', contrast);
-        style.setProperty('--theme-btn-primary-hover-bg', `hsl(${H}, 100%, 40%)`);
-        style.setProperty('--theme-btn-primary-hover-border', `hsl(${H}, 100%, 40%)`);
-        style.setProperty('--theme-btn-outline-border', `hsl(${H}, 100%, 50%)`);
-        style.setProperty('--theme-btn-outline-text', `hsl(${H}, 100%, 50%)`);
-        style.setProperty('--theme-btn-outline-hover-bg', `hsl(${H}, 100%, 50%)`);
-        style.setProperty('--theme-btn-outline-hover-text', contrast);
-        style.setProperty('--theme-tooltip-border', `hsl(${H}, 100%, 50%)`);
-        style.setProperty('--theme-tooltip-shadow', `0 4px 12px hsla(${H}, 100%, 50%, 0.15)`);
-        style.setProperty('--theme-tooltip-arrow', `hsl(${H}, 100%, 50%)`);
-        style.setProperty('--theme-code-text', `hsl(${H}, 100%, 50%)`);
-        style.setProperty('--theme-table-secondary-strong', `hsl(${H}, 100%, 50%)`);
-        // Footer
-        style.setProperty('--theme-footer-accent', `hsl(${H}, 100%, 50%)`);
-        style.setProperty('--theme-footer-link', `hsl(${H}, 90%, 64%)`);
-        style.setProperty('--theme-footer-link-hover', `hsl(${H}, 95%, 72%)`);
-        // Charts
-        style.setProperty('--chart-grid', `hsla(${H}, 40%, 50%, 0.18)`);
-        style.setProperty('--chart-axis-line', `hsl(${H}, 45%, 80%)`);
-        style.setProperty('--chart-axis-label', `hsl(${H}, 35%, 65%)`);
-        style.setProperty('--chart-axis-title', `hsl(${H}, 40%, 72%)`);
-        style.setProperty('--chart-hover-line', `hsl(${H}, 45%, 80%)`);
-        style.setProperty('--chart-empty-text', `hsl(${H}, 30%, 55%)`);
-        style.setProperty('--chart-gap-segment', `hsla(${H}, 30%, 50%, 0.5)`);
-        style.setProperty('--chart-annotation-border', `hsla(${H}, 35%, 50%, 0.15)`);
-    } else {
-        const contrast = getContrastText(H, 90, 52);
-        // Accent
-        style.setProperty('--theme-accent', `hsl(${H}, 90%, 52%)`);
-        style.setProperty('--theme-accent-hover', `hsl(${H}, 100%, 35%)`);
-        style.setProperty('--theme-accent-outline', `hsl(${H}, 100%, 50%)`);
-        style.setProperty('--theme-accent-bg-hover', `hsl(${H}, 100%, 95%)`);
-        style.setProperty('--theme-accent-glow', `hsla(${H}, 100%, 50%, 0.3)`);
-        style.setProperty('--theme-btn-primary-bg', `hsl(${H}, 90%, 52%)`);
-        style.setProperty('--theme-btn-primary-border', `hsl(${H}, 90%, 52%)`);
-        style.setProperty('--theme-btn-primary-text', contrast);
-        style.setProperty('--theme-btn-primary-hover-bg', `hsl(${H}, 90%, 45%)`);
-        style.setProperty('--theme-btn-primary-hover-border', `hsl(${H}, 90%, 45%)`);
-        style.setProperty('--theme-btn-outline-border', `hsl(${H}, 90%, 52%)`);
-        style.setProperty('--theme-btn-outline-text', `hsl(${H}, 90%, 52%)`);
-        style.setProperty('--theme-btn-outline-hover-bg', `hsl(${H}, 90%, 52%)`);
-        style.setProperty('--theme-btn-outline-hover-text', contrast);
-        style.setProperty('--theme-tooltip-border', `hsl(${H}, 40%, 35%)`);
-        style.setProperty('--theme-tooltip-shadow', 'none');
-        style.setProperty('--theme-tooltip-arrow', `hsl(${H}, 40%, 35%)`);
-        style.removeProperty('--theme-code-text');
-        style.removeProperty('--theme-table-secondary-strong');
-        // Footer
-        style.setProperty('--theme-footer-accent', `hsl(${H}, 70%, 31%)`);
-        style.setProperty('--theme-footer-link', `hsl(${H}, 90%, 42%)`);
-        style.setProperty('--theme-footer-link-hover', `hsl(${H}, 90%, 32%)`);
-        // Charts
-        style.setProperty('--chart-grid', `hsla(${H}, 40%, 50%, 0.18)`);
-        style.setProperty('--chart-axis-line', `hsl(${H}, 50%, 28%)`);
-        style.setProperty('--chart-axis-label', `hsl(${H}, 40%, 40%)`);
-        style.setProperty('--chart-axis-title', `hsl(${H}, 45%, 32%)`);
-        style.setProperty('--chart-hover-line', `hsl(${H}, 50%, 28%)`);
-        style.setProperty('--chart-empty-text', `hsl(${H}, 35%, 42%)`);
-        style.setProperty('--chart-gap-segment', `hsla(${H}, 30%, 50%, 0.5)`);
-        style.setProperty('--chart-annotation-border', `hsla(${H}, 35%, 50%, 0.15)`);
-    }
-
-    // Redraw charts to pick up new CSS variables
+function redrawAllCharts() {
     if (window.eucChartSync && window.eucChartSync.charts) {
         Object.values(window.eucChartSync.charts).forEach(chart => {
             if (chart && typeof chart.redraw === 'function') chart.redraw();
         });
     }
+}
+
+/**
+ * Apply theme hue to all CSS variables (accent, footer, charts). Null removes all overrides.
+ * @param {number|null} hue - Hue value (0-360) or null to reset
+ */
+function applyThemeHue(hue) {
+    const style = document.body.style;
+
+    // Theme definition table: CSS variable → { dark: spec, light: spec }
+    // spec formats: [s, l] → hsl, [s, l, a] → hsla, 'string' → literal, null → removeProperty
+    // 'contrast' is special-cased below for button text that needs getContrastText()
+    const THEME_DEFS = {
+        // Accent
+        '--theme-accent':                  { dark: [100, 50],     light: [90, 52] },
+        '--theme-accent-hover':            { dark: [100, 40],     light: [100, 35] },
+        '--theme-accent-contrast':         { dark: 'contrast',    light: 'contrast' },
+        '--theme-accent-bg-hover':         { dark: [37, 16],      light: [100, 95] },
+        '--theme-accent-glow':             { dark: [100, 50, 0.3], light: [100, 50, 0.3] },
+        // Tooltips
+        '--theme-tooltip-border':          { dark: [100, 50],     light: [40, 35] },
+        '--theme-tooltip-shadow':          { dark: 'shadow',      light: 'none' },
+        '--theme-tooltip-arrow':           { dark: [100, 50],     light: [40, 35] },
+        // Code & Table
+        '--theme-code-text':               { dark: [100, 50],     light: null },
+        '--theme-table-secondary-strong':  { dark: [100, 50],     light: null },
+        // Footer
+        '--theme-footer-accent':           { dark: [100, 50],     light: [70, 31] },
+        '--theme-footer-link':             { dark: [90, 64],      light: [90, 42] },
+        '--theme-footer-link-hover':       { dark: [95, 72],      light: [90, 32] },
+        // Charts
+        '--chart-grid':                    { dark: [40, 50, 0.18], light: [40, 50, 0.18] },
+        '--chart-axis-line':               { dark: [45, 80],      light: [50, 28] },
+        '--chart-axis-label':              { dark: [35, 65],      light: [40, 40] },
+        '--chart-axis-title':              { dark: [40, 72],      light: [45, 32] },
+        '--chart-hover-line':              { dark: [45, 80],      light: [50, 28] },
+        '--chart-empty-text':              { dark: [30, 55],      light: [35, 42] },
+        '--chart-gap-segment':             { dark: [30, 50, 0.5], light: [30, 50, 0.5] },
+        '--chart-annotation-border':       { dark: [35, 50, 0.15], light: [35, 50, 0.15] },
+        // Map Controls (active accent)
+        '--map-ctrl-active-bg':            { dark: [100, 50, 0.3], light: [90, 52, 0.3] },
+        '--map-ctrl-active-border':        { dark: [100, 50, 0.8], light: [90, 52, 0.8] },
+        '--map-ctrl-active-hover-bg':      { dark: [100, 50, 0.5], light: [90, 52, 0.5] },
+        '--map-ctrl-active-hover-border':  { dark: [100, 50, 1.0], light: [90, 52, 1.0] },
+    };
+
+    // Collect all variable names for reset
+    const allVars = Object.keys(THEME_DEFS);
+
+    if (hue === null) {
+        allVars.forEach(v => style.removeProperty(v));
+        redrawAllCharts();
+        return;
+    }
+
+    const H = hue;
+    const isDark = document.body.classList.contains('dark-mode');
+    const mode = isDark ? 'dark' : 'light';
+    const contrast = isDark ? getContrastText(H, 100, 50) : getContrastText(H, 90, 52);
+
+    for (const [varName, def] of Object.entries(THEME_DEFS)) {
+        const spec = def[mode];
+        if (spec === null) {
+            style.removeProperty(varName);
+        } else if (spec === 'contrast') {
+            style.setProperty(varName, contrast);
+        } else if (spec === 'none') {
+            style.setProperty(varName, 'none');
+        } else if (spec === 'shadow') {
+            style.setProperty(varName, `0 4px 12px hsla(${H}, 100%, 50%, 0.15)`);
+        } else if (typeof spec === 'string') {
+            style.setProperty(varName, spec);
+        } else if (spec.length === 3) {
+            style.setProperty(varName, `hsla(${H}, ${spec[0]}%, ${spec[1]}%, ${spec[2]})`);
+        } else {
+            style.setProperty(varName, `hsl(${H}, ${spec[0]}%, ${spec[1]}%)`);
+        }
+    }
+
+    redrawAllCharts();
 }
 
 /**
@@ -234,7 +214,12 @@ function initHueSlider() {
         applyThemeHue(parseInt(saved));
         updateHueSwatch(parseInt(saved));
     } else {
-        updateHueSwatch(null);
+        // Random hue on each load until user explicitly picks one
+        const hue = Math.floor(Math.random() * 360);
+        slider.value = hue;
+        valueDisplay.textContent = hue + '°';
+        applyThemeHue(hue);
+        updateHueSwatch(hue);
     }
 
     slider.addEventListener('input', () => {
@@ -246,7 +231,7 @@ function initHueSlider() {
     });
 
     document.getElementById('hue-random-btn').addEventListener('click', () => {
-        const hue = Math.floor(Math.random() * 361);
+        const hue = Math.floor(Math.random() * 360);
         slider.value = hue;
         valueDisplay.textContent = hue + '°';
         localStorage.setItem('themeHue', hue);
@@ -326,6 +311,9 @@ function init() {
         handleApplyTimeRange,
         handleResetTimeRange
     );
+
+    // Setup export trimmed CSV button
+    document.getElementById('export-trimmed-csv-btn').addEventListener('click', handleExportTrimmedCSV);
 
     // Show initial placeholder state
     showPlaceholderState();
@@ -594,6 +582,7 @@ async function loadCSVFileBrowser() {
                     <button class="btn map-style-btn btn-lg" onclick="document.getElementById('csv-file-input').click()">
                         Choose CSV File
                     </button>
+                    <small class="text-muted d-block mt-2">📱 Mobile: files in root Downloads may not open — use a subfolder<br>Common log locations: Downloads/EUCWorld, Downloads/WheelLog, Downloads/DarknessBot</small>
                     <hr class="my-4">
                     <small class="text-muted d-block mb-2">or preview a sample log</small>
                     <button class="btn map-style-btn" onclick="loadSampleData()">
@@ -771,7 +760,7 @@ function processFile(file) {
         const format = FormatDetector.detectFormat(csvContent, file.name);
 
         if (format === 'Unknown') {
-            alert('Unable to detect CSV format. Please ensure this is a valid EUC World, WheelLog, or DarknessBot CSV file.');
+            showUnknownFormatDiagnostic(csvContent, file.name);
             showLoading(false);
             return;
         }
@@ -1309,7 +1298,7 @@ function renderGPSMap(gpsRoute, onMapReadyCallback) {
         `;
         // Still call callback even if no GPS (time range should still work)
         if (onMapReadyCallback) {
-            setTimeout(onMapReadyCallback, 50);
+            setTimeout(onMapReadyCallback, MAP_READY_CALLBACK_DELAY_MS);
         }
         return;
     }
@@ -1384,7 +1373,7 @@ function renderGPSMap(gpsRoute, onMapReadyCallback) {
                 onMapReadyCallback();
             }
         }
-    }, 300); // Wait for module to load
+    }, MAP_MODULE_LOAD_DELAY_MS); // Wait for module to load
 }
 
 /**
@@ -1716,7 +1705,7 @@ function renderCharts(chartGroups) {
         // Update render stats now that charts have data (may have been called
         // earlier by the map callback before charts existed)
         updateRenderStatsFromCurrentData();
-    }, 200);
+    }, CHART_INIT_DELAY_MS);
 }
 
 /**
@@ -1981,11 +1970,7 @@ function handleDarkModeToggle(event) {
     updateHueSwatch(savedHue !== null ? parseInt(savedHue) : null);
 
     // Redraw charts so they pick up new CSS theme variables
-    if (window.eucChartSync && window.eucChartSync.charts) {
-        Object.values(window.eucChartSync.charts).forEach(chart => {
-            if (chart && typeof chart.redraw === 'function') chart.redraw();
-        });
-    }
+    redrawAllCharts();
 }
 
 /**
@@ -2105,6 +2090,9 @@ function handleApplyTimeRange(startTime, endTime) {
     // Update current data
     currentData = filteredData;
 
+    // Show export trimmed CSV button
+    document.getElementById('export-trim-row').style.display = '';
+
     // Re-render all components
     renderOverview(filteredData);
     renderCharts(filteredData.chartGroups);
@@ -2146,6 +2134,9 @@ function handleResetTimeRange() {
     // Reset to original data
     currentData = JSON.parse(JSON.stringify(originalData));
 
+    // Hide export trimmed CSV button
+    document.getElementById('export-trim-row').style.display = 'none';
+
     // Re-render all components
     renderOverview(currentData);
     renderCharts(currentData.chartGroups);
@@ -2172,6 +2163,116 @@ function handleResetTimeRange() {
         updateRenderStatsFromCurrentData();
     });
 
+}
+
+/**
+ * Handle Export Trimmed CSV button click
+ * Downloads the trimmed CSV rows using the original CSV format
+ */
+function handleExportTrimmedCSV() {
+    if (!currentData || !currentData.filteredIndices) {
+        console.error('[EXPORT] No trimmed data to export — filteredIndices missing');
+        return;
+    }
+    if (!rawParsedCSV) {
+        console.error('[EXPORT] No rawParsedCSV available');
+        return;
+    }
+
+    if (!confirm('Are you sure you want to export the trimmed CSV?')) return;
+
+    const trimmedRows = currentData.filteredIndices.map(i => rawParsedCSV[i]);
+    const csvString = Papa.unparse(trimmedRows);
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const baseName = currentFilename ? currentFilename.replace(/\.csv$/i, '') : 'export';
+    const downloadName = baseName + '_trimmed.csv';
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = downloadName;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    console.log('[EXPORT] Downloaded trimmed CSV:', downloadName, '(' + trimmedRows.length + ' rows)');
+}
+
+/**
+ * Show diagnostic view when CSV format cannot be detected
+ * Displays headers and sample rows so users can diagnose the issue
+ * @param {string} csvContent - Raw CSV file content
+ * @param {string} filename - Original filename
+ */
+function showUnknownFormatDiagnostic(csvContent, filename) {
+    console.error('[APP] Unknown CSV format:', filename);
+
+    // Parse just enough to show headers and sample rows
+    const parsed = Papa.parse(csvContent, {
+        header: true,
+        preview: 5,
+        skipEmptyLines: true
+    });
+
+    const headers = parsed.meta.fields || [];
+    const rows = parsed.data || [];
+    const totalLines = csvContent.split('\n').length - 1; // rough row count
+
+    // Build header badges
+    const headerBadges = headers.map(h =>
+        `<span class="badge bg-secondary me-1 mb-1">${h}</span>`
+    ).join('');
+
+    // Build sample data table
+    let tableHTML = '';
+    if (rows.length > 0) {
+        const displayHeaders = headers.slice(0, 12); // cap columns for readability
+        const truncated = headers.length > 12;
+        tableHTML = `
+            <div class="table-responsive mt-3">
+                <table class="table table-sm table-bordered mb-0" style="font-size: 0.8rem;">
+                    <thead>
+                        <tr>${displayHeaders.map(h => `<th>${h}</th>`).join('')}${truncated ? '<th>...</th>' : ''}</tr>
+                    </thead>
+                    <tbody>
+                        ${rows.map(row => `<tr>${displayHeaders.map(h => {
+                            const val = row[h] != null ? String(row[h]) : '';
+                            return `<td>${val.length > 30 ? val.substring(0, 30) + '...' : val}</td>`;
+                        }).join('')}${truncated ? '<td>...</td>' : ''}</tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    }
+
+    const overviewContainer = document.getElementById('overview-stats');
+    overviewContainer.innerHTML = `
+        <div class="grid-full-width">
+            <div class="alert alert-warning mb-3">
+                <h5 class="alert-heading">⚠️ Unrecognized CSV Format</h5>
+                <p class="mb-1">Could not detect a supported format for <strong>${filename}</strong>.</p>
+                <p class="mb-0">Supported formats: <strong>EUC World</strong>, <strong>WheelLog</strong>, <strong>DarknessBot</strong></p>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h6>File Diagnostic</h6>
+                    <p class="mb-1"><strong>Columns found:</strong> ${headers.length} &nbsp;|&nbsp; <strong>Rows (approx):</strong> ${totalLines}</p>
+                    <div class="mb-2">
+                        <strong>Headers:</strong><br>
+                        ${headerBadges || '<em>No headers detected</em>'}
+                    </div>
+                    ${rows.length > 0 ? `<strong>First ${rows.length} rows:</strong>${tableHTML}` : '<em>No data rows found</em>'}
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <button class="btn map-style-btn" onclick="document.getElementById('csv-file-input').click()">
+                    Try Another File
+                </button>
+            </div>
+        </div>
+    `;
+
+    // Update file info bar to reflect the failed load
+    document.getElementById('file-info').textContent = filename + ' — format not recognized';
 }
 
 /**
@@ -2237,7 +2338,8 @@ function filterDataByTimeRange(data, startTime, endTime) {
         series: filteredSeries,
         gpsRoute: filteredGPSRoute,
         chartGroups: filteredChartGroups,
-        metadata: data.metadata
+        metadata: data.metadata,
+        filteredIndices: filteredIndices
     };
 }
 
