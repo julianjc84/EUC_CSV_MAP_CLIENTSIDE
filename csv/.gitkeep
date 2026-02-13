@@ -1,0 +1,20 @@
+# CSV File Directory
+
+Place your CSV files here. Subdirectories are supported!
+
+## Example Structure:
+
+```
+csv/
+├── my_ride.csv
+├── 2024/
+│   ├── january/
+│   │   ├── ride1.csv
+│   │   └── ride2.csv
+│   └── february/
+│       └── ride3.csv
+└── archive/
+    └── old_ride.csv
+```
+
+All CSV files in any subdirectory will appear in the file browser.

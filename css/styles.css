@@ -1,0 +1,1029 @@
+/* EUC Ride Data Viewer - Client Side Styles */
+
+/* ==================== Theme Variables ==================== */
+/* Light theme (default) */
+:root {
+    /* Page */
+    --theme-bg: #f0f2f5;
+    --theme-bg-card: #ffffff;
+    --theme-bg-deep: #ffffff;
+    --theme-bg-surface: #e2e3e5;
+    --theme-text: #212529;
+    --theme-text-secondary: #6c757d;
+    --theme-text-dimmed: #999;
+    --theme-border: #dee2e6;
+    --theme-border-item: #e9ecef;
+
+    /* Accent (blue in light, green in dark) */
+    --theme-accent: #0d6efd;
+    --theme-accent-hover: #0056b3;
+    --theme-accent-outline: #007bff;
+    --theme-accent-bg-hover: #e7f3ff;
+    --theme-accent-glow: rgba(0, 123, 255, 0.3);
+
+    /* Buttons */
+    --theme-btn-primary-bg: #0d6efd;
+    --theme-btn-primary-border: #0d6efd;
+    --theme-btn-primary-text: #fff;
+    --theme-btn-primary-hover-bg: #0b5ed7;
+    --theme-btn-primary-hover-border: #0b5ed7;
+    --theme-btn-outline-border: #0d6efd;
+    --theme-btn-outline-text: #0d6efd;
+    --theme-btn-outline-hover-bg: #0d6efd;
+    --theme-btn-outline-hover-text: #fff;
+    --theme-btn-light-border: #dee2e6;
+    --theme-btn-light-text: #212529;
+
+    /* Code */
+    --theme-code-bg: inherit;
+    --theme-code-text: inherit;
+
+    /* Charts (read by canvas-chart.js via getComputedStyle) */
+    --chart-bg: #ffffff;
+    --chart-grid: rgba(0, 0, 0, 0.1);
+    --chart-axis-line: #000000;
+    --chart-axis-label: #707070;
+    --chart-axis-title: #505050;
+    --chart-hover-line: #000000;
+    --chart-empty-text: #666666;
+    --chart-gap-segment: rgba(128, 128, 128, 0.5);
+    --chart-annotation-border: rgba(0, 0, 0, 0.1);
+
+    /* Slider */
+    --slider-track: #ebebeb;
+    --slider-pip-color: #506784;
+    --slider-marker: #aaa;
+    --slider-marker-large: #888;
+
+    /* Scrollbar */
+    --scrollbar-track: #f1f1f1;
+    --scrollbar-thumb: #888;
+    --scrollbar-thumb-hover: #555;
+
+    /* Footer */
+    --theme-footer-bg: #e9ecef;
+    --theme-footer-text: #212529;
+    --theme-footer-border: #dee2e6;
+    --theme-footer-accent: #198754;
+    --theme-footer-link: #0d6efd;
+    --theme-footer-link-hover: #0a58ca;
+
+    /* Tooltips */
+    --theme-tooltip-bg: #333;
+    --theme-tooltip-text: #fff;
+    --theme-tooltip-border: #555;
+    --theme-tooltip-shadow: none;
+    --theme-tooltip-arrow: #333;
+
+    /* Diagnostic */
+    --theme-diagnostic-unmapped: rgba(255, 193, 7, 0.15);
+    --theme-diagnostic-code-bg: #f0f0f0;
+    --theme-diagnostic-code-text: inherit;
+
+    /* Table (for dark-mode Bootstrap overrides) */
+    --theme-table-secondary-strong: inherit;
+}
+
+/* Dark theme */
+body.dark-mode {
+    /* Page */
+    --theme-bg: #1a1a1a;
+    --theme-bg-card: #2a2a2a;
+    --theme-bg-deep: #0a0a0a;
+    --theme-bg-surface: #333;
+    --theme-text: #e0e0e0;
+    --theme-text-secondary: #999;
+    --theme-text-dimmed: #666;
+    --theme-border: #444;
+    --theme-border-item: #444;
+
+    /* Accent (green) */
+    --theme-accent: #00ff00;
+    --theme-accent-hover: #00cc00;
+    --theme-accent-outline: #00ff00;
+    --theme-accent-bg-hover: #1a3a1a;
+    --theme-accent-glow: rgba(0, 255, 0, 0.3);
+
+    /* Buttons */
+    --theme-btn-primary-bg: #00ff00;
+    --theme-btn-primary-border: #00ff00;
+    --theme-btn-primary-text: #000;
+    --theme-btn-primary-hover-bg: #00cc00;
+    --theme-btn-primary-hover-border: #00cc00;
+    --theme-btn-outline-border: #00ff00;
+    --theme-btn-outline-text: #00ff00;
+    --theme-btn-outline-hover-bg: #00ff00;
+    --theme-btn-outline-hover-text: #000;
+    --theme-btn-light-border: #f8f9fa;
+    --theme-btn-light-text: #f8f9fa;
+
+    /* Code */
+    --theme-code-bg: #1a1a1a;
+    --theme-code-text: #00ff00;
+
+    /* Charts */
+    --chart-bg: #2a2a2a;
+    --chart-grid: rgba(255, 255, 255, 0.1);
+    --chart-axis-line: #e0e0e0;
+    --chart-axis-label: #b0b0b0;
+    --chart-axis-title: #c0c0c0;
+    --chart-hover-line: #e0e0e0;
+    --chart-empty-text: #888888;
+    --chart-gap-segment: rgba(128, 128, 128, 0.5);
+    --chart-annotation-border: rgba(255, 255, 255, 0.1);
+
+    /* Slider */
+    --slider-track: #444;
+    --slider-pip-color: #999;
+    --slider-marker: #666;
+    --slider-marker-large: #888;
+
+    /* Scrollbar */
+    --scrollbar-track: #1a1a1a;
+    --scrollbar-thumb: #555;
+    --scrollbar-thumb-hover: #888;
+
+    /* Footer */
+    --theme-footer-bg: #0a0a0a;
+    --theme-footer-text: #e0e0e0;
+    --theme-footer-border: #333;
+    --theme-footer-accent: #00ff00;
+    --theme-footer-link: #4dabf7;
+    --theme-footer-link-hover: #74c0fc;
+
+    /* Tooltips */
+    --theme-tooltip-bg: #2a2a2a;
+    --theme-tooltip-text: #e0e0e0;
+    --theme-tooltip-border: #00ff00;
+    --theme-tooltip-shadow: 0 4px 12px rgba(0, 255, 0, 0.15);
+    --theme-tooltip-arrow: #00ff00;
+
+    /* Diagnostic */
+    --theme-diagnostic-unmapped: rgba(255, 193, 7, 0.1);
+    --theme-diagnostic-code-bg: #1a1a1a;
+    --theme-diagnostic-code-text: #00ff00;
+
+    /* Table */
+    --theme-table-secondary-strong: #00ff00;
+}
+
+/* ==================== Base Styles ==================== */
+
+/* Custom Toggle Switch Colors - follows theme hue */
+.form-switch .form-check-input:checked {
+    background-color: var(--theme-accent);
+    border-color: var(--theme-accent);
+}
+
+.form-switch .form-check-input:focus {
+    border-color: var(--theme-accent);
+    box-shadow: 0 0 0 0.25rem var(--theme-accent-glow);
+}
+
+body {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ==================== Cards ==================== */
+.card {
+    background-color: var(--theme-bg-card);
+    color: var(--theme-text);
+    border: none;
+}
+
+.card-body {
+    background-color: var(--theme-bg-card);
+}
+
+/* ==================== Card Section Collapse Toggles ==================== */
+.card-collapse-toggle {
+    cursor: pointer;
+    user-select: none;
+}
+.card-collapse-toggle:hover {
+    opacity: 0.8;
+}
+.card-collapse-toggle .collapse-arrow::before {
+    content: '\25BC'; /* ▼ expanded */
+    font-size: 0.9em;
+    margin-right: 6px;
+    display: inline-block;
+}
+.card-collapse-toggle.collapsed .collapse-arrow::before {
+    content: '\25B6'; /* ▶ collapsed */
+}
+.card-collapse-toggle .collapse-hint {
+    display: none;
+    font-weight: normal;
+    font-size: 0.8rem;
+    opacity: 0.5;
+    margin-left: 8px;
+}
+.card-collapse-toggle.collapsed .collapse-hint {
+    display: inline;
+}
+
+/* ==================== Navbar ==================== */
+.site-navbar {
+    background-color: var(--theme-bg-deep);
+    border-bottom: 1px solid var(--theme-border);
+}
+
+.site-navbar .navbar-brand {
+    color: var(--theme-text);
+}
+
+.site-navbar #file-info,
+.site-navbar .form-check-label {
+    color: var(--theme-text-secondary);
+}
+
+/* ==================== Dark Mode: Bootstrap Overrides ==================== */
+/* These blocks need body.dark-mode prefix + !important to override Bootstrap */
+
+body.dark-mode .text-muted {
+    color: var(--theme-text-secondary) !important;
+}
+
+body.dark-mode .bg-light {
+    background-color: var(--theme-bg) !important;
+    color: var(--theme-text);
+}
+
+body.dark-mode h4, body.dark-mode h5 {
+    color: var(--theme-text) !important;
+}
+
+body.dark-mode small {
+    color: var(--theme-text-secondary) !important;
+}
+
+body.dark-mode strong,
+body.dark-mode table strong,
+body.dark-mode .table strong {
+    color: var(--theme-text) !important;
+}
+
+body.dark-mode .rounded {
+    border: 1px solid var(--theme-border);
+}
+
+/* ==================== Buttons (Dark Mode) ==================== */
+body.dark-mode .btn-outline-primary {
+    border-color: var(--theme-btn-outline-border);
+    color: var(--theme-btn-outline-text);
+}
+
+body.dark-mode .btn-outline-primary:hover {
+    background-color: var(--theme-btn-outline-hover-bg);
+    color: var(--theme-btn-outline-hover-text);
+}
+
+body.dark-mode .btn-outline-primary.btn-sm {
+    border-color: var(--theme-btn-outline-border);
+    color: var(--theme-btn-outline-text);
+}
+
+body.dark-mode .btn-outline-primary.btn-sm:hover {
+    background-color: var(--theme-btn-outline-hover-bg);
+    color: var(--theme-btn-outline-hover-text);
+}
+
+body.dark-mode .btn-primary {
+    background-color: var(--theme-btn-primary-bg);
+    border-color: var(--theme-btn-primary-border);
+    color: var(--theme-btn-primary-text);
+}
+
+body.dark-mode .btn-primary:hover {
+    background-color: var(--theme-btn-primary-hover-bg);
+    border-color: var(--theme-btn-primary-hover-border);
+}
+
+/* ==================== Code ==================== */
+body.dark-mode code {
+    background-color: var(--theme-code-bg) !important;
+    color: var(--theme-code-text) !important;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* ==================== Tables (Dark Mode Bootstrap Overrides) ==================== */
+
+body.dark-mode .table,
+body.dark-mode table {
+    color: var(--theme-text) !important;
+    background-color: var(--theme-bg-card) !important;
+    border-color: var(--theme-border) !important;
+}
+
+body.dark-mode .table-responsive {
+    background-color: var(--theme-bg-card) !important;
+}
+
+body.dark-mode .table-secondary,
+body.dark-mode tr.table-secondary {
+    background-color: var(--theme-bg-surface) !important;
+    color: var(--theme-text) !important;
+}
+
+body.dark-mode .table-secondary strong,
+body.dark-mode tr.table-secondary strong {
+    color: var(--theme-table-secondary-strong) !important;
+}
+
+body.dark-mode .table thead th,
+body.dark-mode table thead th,
+body.dark-mode thead th {
+    color: var(--theme-text) !important;
+    border-color: var(--theme-border) !important;
+    background-color: var(--theme-bg) !important;
+}
+
+body.dark-mode .table td,
+body.dark-mode .table th,
+body.dark-mode table td,
+body.dark-mode table th,
+body.dark-mode td,
+body.dark-mode th {
+    border-color: var(--theme-border) !important;
+    color: var(--theme-text) !important;
+    background-color: var(--theme-bg-card) !important;
+}
+
+body.dark-mode .table tbody tr,
+body.dark-mode table tbody tr,
+body.dark-mode tbody tr {
+    background-color: var(--theme-bg-card) !important;
+    color: var(--theme-text) !important;
+}
+
+/* ==================== File Row Hover ==================== */
+
+/* Unknown format rows - greyed out and non-interactive */
+tr.format-unknown {
+    opacity: 0.5;
+    cursor: default;
+}
+
+tr.format-unknown td {
+    color: var(--theme-text-dimmed) !important;
+}
+
+/* File row hover (accent-themed, works in both light and dark via variables) */
+table tbody tr:not(.table-secondary):not(.format-unknown):hover {
+    background-color: var(--theme-accent-bg-hover) !important;
+    outline: 2px solid var(--theme-accent-outline) !important;
+    outline-offset: -2px !important;
+    box-shadow: 0 0 10px var(--theme-accent-glow) !important;
+}
+
+table tbody tr:not(.table-secondary):not(.format-unknown):hover td {
+    color: var(--theme-accent-hover) !important;
+}
+
+/* ==================== Overview Stats ==================== */
+
+.grid-full-width {
+    background-color: var(--theme-bg-card);
+    color: var(--theme-text);
+    padding: 20px;
+    border-radius: 4px;
+}
+
+#overview-stats {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+}
+
+/* Placeholder content should span all columns */
+#overview-stats > .grid-full-width {
+    grid-column: 1 / -1;
+}
+
+.overview-column {
+    background: var(--theme-bg-card);
+    border-radius: 4px;
+    padding: 16px;
+    box-shadow: none;
+    border: 1px solid var(--theme-border);
+    min-width: 0;
+    color: var(--theme-text);
+}
+
+.overview-column-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--theme-accent);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--theme-accent);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.overview-column-toggle {
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.15s;
+}
+
+.overview-column-toggle:hover {
+    opacity: 0.7;
+}
+
+/* Expanded state: down chevron */
+.overview-column-toggle .collapse-indicator::before {
+    content: '\25BC';
+    font-size: 1.1em;
+    vertical-align: middle;
+    margin-right: 4px;
+    display: inline-block;
+}
+
+/* Collapsed state: right chevron + dimmed title */
+.overview-column-toggle.collapsed {
+    border-bottom-style: dashed;
+    opacity: 0.65;
+}
+
+.overview-column-toggle.collapsed .collapse-indicator::before {
+    content: '\25B6';
+}
+
+.overview-column-toggle.collapsed:hover {
+    opacity: 0.85;
+}
+
+.overview-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--theme-border-item);
+}
+
+.overview-item:last-child {
+    border-bottom: none;
+}
+
+.overview-label {
+    font-size: 0.75rem;
+    color: var(--theme-text-secondary);
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.overview-value {
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--theme-text);
+}
+
+.overview-value-na {
+    color: #dc3545 !important; /* Bootstrap red for zero/N/A values */
+}
+
+/* ==================== noUiSlider Custom Styling ==================== */
+.noUi-target {
+    background: var(--slider-track);
+    border: none;
+    box-shadow: none;
+    border-radius: 3px;
+    height: 5px;
+}
+
+.noUi-connect {
+    background: var(--theme-accent);
+    box-shadow: none;
+    pointer-events: none !important; /* Disable dragging the middle bar */
+}
+
+.noUi-handle {
+    background: var(--theme-bg-card) !important;
+    border: 2px solid var(--theme-accent) !important;
+    border-radius: 50% !important;
+    box-shadow: 0 0 0 0 transparent !important;
+    cursor: pointer !important;
+    width: 20px !important;
+    height: 20px !important;
+    top: -7.5px !important; /* Center 20px handle on 5px track: (5 - 20) / 2 */
+    right: -10px !important; /* Center handle horizontally: 20px / 2 */
+    transition: box-shadow 0.15s ease !important;
+}
+
+.noUi-handle:before,
+.noUi-handle:after {
+    display: none; /* Remove default handle bars */
+}
+
+.noUi-handle:hover {
+    box-shadow: 0 0 0 8px var(--theme-accent-glow) !important;
+}
+
+.noUi-handle:active {
+    box-shadow: 0 0 0 12px var(--theme-accent-glow) !important;
+}
+
+.noUi-handle:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 8px var(--theme-accent-glow) !important;
+}
+
+/* Tooltip styling */
+.noUi-tooltip {
+    background: var(--theme-tooltip-bg);
+    color: var(--theme-tooltip-text);
+    border: 1px solid var(--theme-tooltip-border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Pips (time marks) - Dash RangeSlider style */
+.noUi-pips {
+    color: var(--slider-pip-color);
+    font-size: 0.65rem;
+    pointer-events: none; /* Allow clicks to pass through to buttons below */
+}
+
+.noUi-marker-horizontal {
+    background: var(--slider-marker);
+    width: 1px;
+    height: 5px;
+}
+
+.noUi-marker-large {
+    height: 8px;
+    background: var(--slider-marker-large);
+}
+
+.noUi-value {
+    color: var(--slider-pip-color);
+    font-size: 0.65rem;
+    padding-top: 12px; /* Increased spacing to avoid overlap with markers */
+    font-weight: 400;
+}
+
+.noUi-value-horizontal {
+    transform: translateX(-50%);
+}
+
+/* ==================== Responsive adjustments for 7 columns ==================== */
+@media (max-width: 1400px) {
+    .overview-column-title {
+        font-size: 0.85rem;
+    }
+    .overview-value {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 992px) {
+    #overview-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .overview-column {
+        padding: 14px;
+    }
+}
+
+@media (max-width: 576px) {
+    #overview-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==================== Chart Containers ==================== */
+.chart-wrapper {
+    margin-bottom: 5px;
+    position: relative;
+    background-color: var(--chart-bg);
+}
+
+.chart-title {
+    display: none; /* Hide chart titles */
+}
+
+/* ==================== GPS Map ==================== */
+#gps-map {
+    position: relative;
+    z-index: 1;
+}
+
+/* Leaflet custom controls (matching DASHAPP) */
+.custom-map-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.map-control-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255,255,255,1.0);
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.map-control-btn:hover {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0,0,0,1.0);
+    color: black;
+    transform: scale(1.05);
+}
+
+/* ==================== Map Style Buttons ==================== */
+.map-style-btn {
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 6px 12px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    border: 1px solid var(--theme-btn-light-border);
+    background: transparent;
+    color: var(--theme-btn-light-text);
+}
+
+/* Accent-themed hover (works in both light and dark via variables) */
+.map-style-btn:hover:not(:disabled) {
+    background: var(--theme-accent-bg-hover) !important;
+    border-color: var(--theme-accent-hover) !important;
+    color: var(--theme-accent-hover) !important;
+    outline: 2px solid var(--theme-accent-outline) !important;
+    outline-offset: -2px !important;
+    transform: scale(1.05);
+    box-shadow: 0 0 10px var(--theme-accent-glow) !important;
+}
+
+.map-style-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed !important;
+    filter: grayscale(50%);
+}
+
+/* Back to Files button hover */
+#back-to-files-btn:hover {
+    background: var(--theme-accent-bg-hover) !important;
+    border-color: var(--theme-accent-hover) !important;
+    color: var(--theme-accent-hover) !important;
+    outline: 2px solid var(--theme-accent-outline) !important;
+    outline-offset: -2px !important;
+    transform: scale(1.05);
+    box-shadow: 0 0 10px var(--theme-accent-glow) !important;
+}
+
+/* ==================== Drop Zone Styling ==================== */
+body.drag-over::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(13, 110, 253, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9998;
+    pointer-events: none;
+}
+
+body.drag-over::before {
+    content: '\1F4C2 Drop CSV file to load';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(13, 110, 253, 0.95);
+    color: white;
+    padding: 30px 60px;
+    border-radius: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    z-index: 9999;
+    pointer-events: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+}
+
+/* ==================== Loading Overlay ==================== */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+/* ==================== Time Range Slider ==================== */
+#time-range-slider {
+    width: calc(100% - 40px); /* Add padding on edges */
+    margin: 0 20px 55px 20px; /* Edge padding and bottom space for pips */
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 768px) {
+    #gps-map {
+        height: 80vh !important;
+    }
+}
+
+/* ==================== Smooth Transitions ==================== */
+/* Exclude Leaflet map elements for better performance */
+*:not(#gps-map):not(#gps-map *):not(.leaflet-container):not(.leaflet-container *):not(.tooltip):not(.tooltip *):not(.popover):not(.popover *) {
+    transition: all 0.2s ease;
+}
+
+/* ==================== Format Icons ==================== */
+.format-icon {
+    height: 48px;
+    width: auto;
+    margin-right: 12px;
+    vertical-align: middle;
+    float: left;
+}
+
+/* Format Icons in File List */
+.file-list-icon {
+    height: 24px;
+    width: auto;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+/* Format Icons in Summary Header */
+.summary-icon {
+    height: 20px;
+    width: auto;
+    vertical-align: middle;
+    display: inline-block;
+    margin: 0 4px;
+}
+
+/* ==================== Version Badge - Retro Console Style ==================== */
+.version-badge {
+    font-family: 'Courier New', Courier, monospace;
+    background: #1a1a1a;
+    color: #00ff00;
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: 1px solid #333;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    font-weight: normal;
+}
+
+/* ==================== Bootstrap Tooltips ==================== */
+.tooltip {
+    pointer-events: auto;
+}
+
+.tooltip .tooltip-inner {
+    max-width: 400px;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    background-color: var(--theme-tooltip-bg);
+    color: var(--theme-tooltip-text);
+    border: 1px solid var(--theme-tooltip-border);
+    box-shadow: var(--theme-tooltip-shadow);
+    user-select: text;
+    cursor: text;
+}
+
+.tooltip .tooltip-arrow::before {
+    border-top-color: var(--theme-tooltip-arrow) !important;
+    border-bottom-color: var(--theme-tooltip-arrow) !important;
+    border-left-color: var(--theme-tooltip-arrow) !important;
+    border-right-color: var(--theme-tooltip-arrow) !important;
+}
+
+/* Tooltip hover hint */
+.overview-item[data-bs-toggle="tooltip"],
+#render-stats-section [data-bs-toggle="tooltip"] {
+    cursor: help;
+}
+
+/* ==================== File Info - Retro Console Style ==================== */
+#file-info {
+    font-family: 'Courier New', Courier, monospace;
+    background: var(--theme-bg-deep);
+    color: var(--theme-accent);
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--theme-border);
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    min-height: 64px;
+}
+
+#file-info .badge {
+    font-family: 'Courier New', Courier, monospace;
+    background: transparent !important;
+    color: var(--theme-accent) !important;
+    border: none;
+    font-weight: normal;
+    letter-spacing: 0.5px;
+    padding: 0;
+}
+
+#file-info .text-muted {
+    color: var(--theme-text-dimmed) !important;
+}
+
+/* ==================== Custom Scrollbar ==================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+}
+
+/* ==================== Footer Styles ==================== */
+.page-footer {
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--theme-footer-bg);
+    color: var(--theme-footer-text);
+    padding: 16px 0;
+    margin-top: 32px;
+    border-top: 2px solid var(--theme-footer-border);
+    font-size: 0.875rem;
+}
+
+.page-footer .footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.page-footer .footer-left,
+.page-footer .footer-center,
+.page-footer .footer-right {
+    flex: 1;
+}
+
+.page-footer .footer-left {
+    text-align: left;
+    font-family: 'Courier New', Courier, monospace;
+    color: var(--theme-footer-accent);
+    font-weight: 500;
+}
+
+.page-footer .footer-center {
+    text-align: center;
+}
+
+.page-footer .footer-right {
+    text-align: right;
+}
+
+.page-footer a {
+    color: var(--theme-footer-link);
+    text-decoration: none;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.page-footer a:hover {
+    color: var(--theme-footer-link-hover);
+    text-decoration: underline;
+}
+
+.page-footer .footer-right a {
+    display: inline-flex;
+    align-items: center;
+    opacity: 0.8;
+}
+
+.page-footer .footer-right a:hover {
+    opacity: 1;
+    text-decoration: none;
+}
+
+.page-footer .footer-right svg {
+    transition: transform 0.2s ease;
+}
+
+.page-footer .footer-right a:hover svg {
+    transform: scale(1.1);
+}
+
+/* Responsive Footer */
+@media (max-width: 768px) {
+    .page-footer .footer-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+    }
+
+    .page-footer .footer-left,
+    .page-footer .footer-center,
+    .page-footer .footer-right {
+        text-align: center;
+    }
+}
+
+/* ==================== Diagnostic View ==================== */
+.diagnostic-unmapped td {
+    background-color: var(--theme-diagnostic-unmapped) !important;
+}
+
+.diagnostic-absent {
+    opacity: 0.5;
+    font-style: italic;
+}
+
+#diagnostic-table-container .table {
+    font-size: 0.85rem;
+}
+
+#diagnostic-table-container code {
+    font-size: 0.8rem;
+    padding: 1px 4px;
+    background: var(--theme-diagnostic-code-bg);
+    color: var(--theme-diagnostic-code-text);
+    border-radius: 3px;
+}
+
+/* ==================== Hue Slider ==================== */
+.hue-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--theme-border);
+    background-color: var(--theme-accent);
+    flex-shrink: 0;
+}
+.hue-label {
+    white-space: nowrap;
+}
+.hue-slider {
+    width: 140px;
+    accent-color: var(--theme-accent);
+}
+.hue-value {
+    min-width: 28px;
+    text-align: right;
+}
+
+/* ==================== Marker Animation Control ==================== */
+/* By default, disable all marker animations for performance */
+.leaflet-marker-icon > div {
+    animation: none !important;
+}
+
+/* Only enable animations when marker-animations-enabled class is on body */
+/* Uses CSS custom properties set in marker HTML (--animation-name, --animation-duration) */
+body.marker-animations-enabled .leaflet-marker-icon > div {
+    animation: var(--animation-name) var(--animation-duration) ease-in-out infinite !important;
+}

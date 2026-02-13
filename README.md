@@ -2,6 +2,22 @@
 
 **Pure JavaScript** version of the EUC ride data visualization dashboard. Fully offline, privacy-first design.
 
+**Live Demo:** [map.jc84.com](https://map.jc84.com)
+
+## 📸 Interface Preview
+
+### Interactive GPS Map & Route Visualization
+![GPS Map with route tracking](assets/githubImages/map.png)
+
+### Real-Time Synchronized Charts
+![Performance charts with synchronized data](assets/githubImages/charts.png)
+
+### Comprehensive Ride Statistics
+![Detailed ride statistics panel](assets/githubImages/stats.png)
+
+### Time Range Filtering
+![Time range selection controls](assets/githubImages/timerange.png)
+
 ## 🚀 Features
 
 - ✅ **Client-Side Only** - All processing happens in your browser

@@ -1,0 +1,36 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      ".git/**",
+      ".gitignore",
+      "server.py",
+      "start_basic.sh",
+      "start_directory.sh",
+      "requirements.txt",
+      "venv/**",
+      "csv/**",
+      "assets/githubImages/**",
+      "README.md",
+      "README_SERVER.md",
+      "START_OPTIONS.md",
+      "LICENSE.txt"
+    ],
+    "headers": [
+      {
+        "source": "**/*.html",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "source": "**/*.{js,mjs,css}",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "source": "vendor/**",
+        "headers": [{ "key": "Cache-Control", "value": "max-age=604800" }]
+      }
+    ]
+  }
+}
