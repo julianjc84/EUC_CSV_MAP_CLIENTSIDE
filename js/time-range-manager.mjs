@@ -6,69 +6,25 @@
 import { formatTimestamp, formatDuration } from './format-utils.js';
 
 /**
- * Generate smart time marks based on duration
- * Adapted from DASHAPP's intelligent interval selection
+ * Generate evenly-spaced time marks matching chart X-axis layout.
+ * Uses linear time scale with exactly NUM_MARKS labels, same approach as canvas-chart.js drawXAxisLabels().
  * @param {number} startTimestamp - Start timestamp in milliseconds
  * @param {number} endTimestamp - End timestamp in milliseconds
- * @returns {Object} - Object with timestamp keys and time label values
+ * @returns {Object} - Object with timestamp keys (seconds) and time label values
  */
+const NUM_MARKS = 14; // Matches canvas-chart.js X_AXIS_LABEL_COUNT
+
 function generateTimeMarks(startTimestamp, endTimestamp) {
     const marks = {};
-    const totalSeconds = (endTimestamp - startTimestamp) / 1000;
+    const timeRange = endTimestamp - startTimestamp;
 
-    // Calculate interval based on total duration (target 20 marks)
-    const targetMarks = 20;
-    const idealInterval = totalSeconds / targetMarks;
+    // Show seconds if ride is under ~25 minutes (same threshold as charts)
+    const totalSeconds = timeRange / 1000;
+    const showSeconds = totalSeconds <= 1500;
 
-    // Smart interval selection (from DASHAPP logic)
-    let intervalSeconds;
-    if (idealInterval <= 1) {
-        intervalSeconds = 1; // 1 second
-    } else if (idealInterval <= 5) {
-        intervalSeconds = 5; // 5 seconds
-    } else if (idealInterval <= 10) {
-        intervalSeconds = 10; // 10 seconds
-    } else if (idealInterval <= 15) {
-        intervalSeconds = 15; // 15 seconds
-    } else if (idealInterval <= 30) {
-        intervalSeconds = 30; // 30 seconds
-    } else if (idealInterval <= 45) {
-        intervalSeconds = 45; // 45 seconds
-    } else if (idealInterval <= 60) {
-        intervalSeconds = 60; // 1 minute
-    } else if (idealInterval <= 90) {
-        intervalSeconds = 90; // 1.5 minutes
-    } else if (idealInterval <= 120) {
-        intervalSeconds = 120; // 2 minutes
-    } else if (idealInterval <= 150) {
-        intervalSeconds = 150; // 2.5 minutes
-    } else if (idealInterval <= 300) {
-        intervalSeconds = 300; // 5 minutes
-    } else if (idealInterval <= 450) {
-        intervalSeconds = 450; // 7.5 minutes
-    } else if (idealInterval <= 600) {
-        intervalSeconds = 600; // 10 minutes
-    } else if (idealInterval <= 750) {
-        intervalSeconds = 750; // 12.5 minutes
-    } else if (idealInterval <= 900) {
-        intervalSeconds = 900; // 15 minutes
-    } else if (idealInterval <= 1800) {
-        intervalSeconds = 1800; // 30 minutes
-    } else if (idealInterval <= 3600) {
-        intervalSeconds = 3600; // 1 hour
-    } else {
-        intervalSeconds = 3600; // 1 hour (max)
-    }
-
-    // Choose time format based on granularity
-    const showSeconds = intervalSeconds <= 60;
-
-    // Generate marks at regular intervals
-    const intervalMs = intervalSeconds * 1000;
-    let currentTime = startTimestamp;
-
-    while (currentTime <= endTimestamp) {
-        const date = new Date(currentTime);
+    for (let i = 0; i < NUM_MARKS; i++) {
+        const timestamp = startTimestamp + (i * timeRange / (NUM_MARKS - 1));
+        const date = new Date(timestamp);
         const hours = date.getHours().toString().padStart(2, '0');
         const minutes = date.getMinutes().toString().padStart(2, '0');
         const seconds = date.getSeconds().toString().padStart(2, '0');
@@ -77,26 +33,10 @@ function generateTimeMarks(startTimestamp, endTimestamp) {
             ? `${hours}:${minutes}:${seconds}`
             : `${hours}:${minutes}`;
 
-        // noUiSlider uses seconds as keys
-        marks[Math.floor(currentTime / 1000)] = timeLabel;
-
-        currentTime += intervalMs;
+        marks[Math.floor(timestamp / 1000)] = timeLabel;
     }
 
-    // Add end mark if not too close to last mark
-    const endKey = Math.floor(endTimestamp / 1000);
-    const lastMarkKey = Math.max(...Object.keys(marks).map(k => parseInt(k)));
-    const minSpacing = Math.max(intervalSeconds * 0.3, 60); // 30% of interval or 1 minute
-
-    if (endKey - lastMarkKey >= minSpacing) {
-        const endDate = new Date(endTimestamp);
-        const hours = endDate.getHours().toString().padStart(2, '0');
-        const minutes = endDate.getMinutes().toString().padStart(2, '0');
-        const seconds = endDate.getSeconds().toString().padStart(2, '0');
-        marks[endKey] = showSeconds ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}`;
-    }
-
-    console.log(`[TIME RANGE] Generated ${Object.keys(marks).length} marks with ${intervalSeconds}s interval`);
+    console.log(`[TIME RANGE] Generated ${Object.keys(marks).length} evenly-spaced marks`);
 
     return marks;
 }
@@ -228,6 +168,21 @@ export function createTimeRangeManager(gpsMapInstance, onApplyCallback, onResetC
     }
 
     /**
+     * Broadcast trim preview to all registered charts.
+     * @param {number|null} startMs - Trim start in ms, or null to clear
+     * @param {number|null} endMs - Trim end in ms, or null to clear
+     */
+    function broadcastTrimPreview(startMs, endMs) {
+        if (!window.eucChartSync || !window.eucChartSync.charts) return;
+        const charts = Object.values(window.eucChartSync.charts);
+        if (startMs === null) {
+            charts.forEach(chart => { if (chart.clearTrimPreview) chart.clearTrimPreview(); });
+        } else {
+            charts.forEach(chart => { if (chart.setTrimPreview) chart.setTrimPreview(startMs, endMs); });
+        }
+    }
+
+    /**
      * Handle slider update (real-time during drag)
      * @param {Array} values - [trimInSeconds, trimOutSeconds]
      */
@@ -236,16 +191,17 @@ export function createTimeRangeManager(gpsMapInstance, onApplyCallback, onResetC
 
         const trimInMs = parseInt(values[0]) * 1000;
         const trimOutMs = parseInt(values[1]) * 1000;
+        const isFullRange = trimInMs <= fullRange[0] + 1000 && trimOutMs >= fullRange[1] - 1000;
 
         // Update GPS markers in real-time (preview)
         if (gpsMapInstance) {
-            const isFullRange = trimInMs <= fullRange[0] && trimOutMs >= fullRange[1];
             if (isFullRange) {
                 gpsMapInstance.clearTimeRangeMarkers();
             } else {
                 gpsMapInstance.updateTimeRangeMarkers(trimInMs, trimOutMs);
             }
         }
+
     }
 
     /**
@@ -258,10 +214,16 @@ export function createTimeRangeManager(gpsMapInstance, onApplyCallback, onResetC
 
         currentRange = [trimInMs, trimOutMs];
 
-        // Enable/disable apply button
-        const isFullRange = trimInMs <= fullRange[0] && trimOutMs >= fullRange[1];
+        // Enable/disable apply button + update chart trim preview
+        // Use 1s tolerance for full-range check since slider works in whole seconds
+        const isFullRange = trimInMs <= fullRange[0] + 1000 && trimOutMs >= fullRange[1] - 1000;
         applyBtn.disabled = isFullRange;
 
+        if (isFullRange) {
+            broadcastTrimPreview(null, null);
+        } else {
+            broadcastTrimPreview(trimInMs, trimOutMs);
+        }
     }
 
     /**
@@ -271,8 +233,12 @@ export function createTimeRangeManager(gpsMapInstance, onApplyCallback, onResetC
         isDragging = false;
         console.log('[TIME RANGE MANAGER] Drag ended', currentRange);
 
-        // Update status
-        const isFullRange = currentRange[0] <= fullRange[0] && currentRange[1] >= fullRange[1];
+        // Keep trim preview visible — clear only if back to full range
+        const isFullRange = currentRange[0] <= fullRange[0] + 1000 && currentRange[1] >= fullRange[1] - 1000;
+        if (isFullRange) {
+            broadcastTrimPreview(null, null);
+        }
+
         applyBtn.disabled = isFullRange;
     }
 
@@ -286,6 +252,9 @@ export function createTimeRangeManager(gpsMapInstance, onApplyCallback, onResetC
         }
 
         console.log(`[TIME RANGE MANAGER] Applying trim: ${formatTimestamp(currentRange[0])} → ${formatTimestamp(currentRange[1])}`);
+
+        // Clear chart trim preview (charts will re-render with trimmed data)
+        broadcastTrimPreview(null, null);
 
         // Call callback with range
         onApplyCallback(currentRange[0], currentRange[1]);
@@ -304,6 +273,9 @@ export function createTimeRangeManager(gpsMapInstance, onApplyCallback, onResetC
         }
 
         console.log('[TIME RANGE MANAGER] Resetting to full range');
+
+        // Clear chart trim preview
+        broadcastTrimPreview(null, null);
 
         // Reset slider to full range
         sliderInstance.set([fullRange[0] / 1000, fullRange[1] / 1000]);

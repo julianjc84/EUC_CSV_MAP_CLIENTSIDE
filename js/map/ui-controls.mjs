@@ -7,9 +7,29 @@
  * - Panel content generation
  * - Overlay toggles
  * - Layer switching
+ *
+ * All visual styling uses CSS classes from styles.css (map-ctrl-btn, map-panel-btn,
+ * map-panel, map-panel-header, map-toggle-row). No hardcoded RGBA colors in JS.
  */
 
 import { createPrivacyPanelContent } from './privacy-filter.mjs';
+
+// ==================== Helpers ====================
+
+/**
+ * Create a styled panel header
+ * @param {HTMLElement} container - Parent element
+ * @param {string} icon - Emoji icon
+ * @param {string} title - Header title text
+ * @returns {HTMLElement} Header element
+ */
+function createPanelHeader(container, icon, title) {
+    const header = L.DomUtil.create('div', 'map-panel-header', container);
+    header.innerHTML = `${icon} ${title}`;
+    return header;
+}
+
+// ==================== Main Controls ====================
 
 /**
  * Create map control buttons
@@ -19,21 +39,18 @@ import { createPrivacyPanelContent } from './privacy-filter.mjs';
  */
 export function createMapControls(map, callbacks) {
     const controlContainer = L.DomUtil.create('div', 'custom-map-controls');
-    controlContainer.style.cssText = `
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 1000;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    `;
+
+    // FAB button — always visible, toggles button container
+    const fabButton = L.DomUtil.create('button', 'map-ctrl-btn fab', controlContainer);
+    fabButton.innerHTML = '\u2630'; // ☰
+    fabButton.title = 'Toggle map controls';
+    L.DomEvent.disableClickPropagation(fabButton);
 
     // Control buttons configuration
     const buttons = [
         {
             id: 'zoom-to-fit',
-            icon: '⌖',
+            icon: '\u2316',
             title: 'Zoom to fit track',
             action: callbacks.zoomToFitTrack
         },
@@ -45,154 +62,106 @@ export function createMapControls(map, callbacks) {
         },
         {
             id: 'zoom-out',
-            icon: '−',
+            icon: '\u2212',
             title: 'Zoom out',
             action: callbacks.zoomOut
         },
         {
             id: 'toggle-mouse-zoom',
-            icon: '🖱',
+            icon: '\uD83D\uDDB1',
             title: 'Toggle mouse zoom (enable/disable wheel zoom)',
             action: callbacks.toggleMouseZoom,
             isToggle: true
         },
         {
             id: 'toggle-map-views',
-            icon: '🗺',
+            icon: '\uD83D\uDDFA',
             title: 'Toggle map view controls panel',
             action: callbacks.toggleMapViewsPanel,
             isToggle: true
         },
         {
             id: 'toggle-routes',
-            icon: '🛤️',
+            icon: '\uD83D\uDEE4\uFE0F',
             title: 'Toggle route overlays panel',
             action: callbacks.toggleRoutesPanel,
             isToggle: true
         },
         {
             id: 'toggle-overlays',
-            icon: '📍',
+            icon: '\uD83D\uDCCD',
             title: 'Toggle marker overlays panel',
             action: callbacks.toggleOverlaysPanel,
             isToggle: true
         },
         {
             id: 'toggle-privacy',
-            icon: '👁️',
+            icon: '\uD83D\uDC41\uFE0F',
             title: 'Toggle privacy mode panel (hide start/end locations)',
             action: callbacks.togglePrivacyPanel,
             isToggle: true
         },
         {
             id: 'toggle-fullscreen',
-            icon: '⛶',
+            icon: '\u26F6',
             title: 'Toggle fullscreen map',
             action: callbacks.toggleFullscreen,
             isToggle: true
         }
     ];
 
-    // Create horizontal container for buttons
+    // Vertical container for the 9 buttons — hidden by default
     const buttonContainer = L.DomUtil.create('div', 'map-control-buttons', controlContainer);
-    buttonContainer.style.cssText = `
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-        justify-content: flex-end;
-    `;
+    buttonContainer.style.cssText = 'display: none; flex-direction: column; gap: 8px; align-items: flex-end;';
+
+    let fabExpanded = false;
+
+    // FAB click handler
+    L.DomEvent.on(fabButton, 'click', function(e) {
+        L.DomEvent.stopPropagation(e);
+        fabExpanded = !fabExpanded;
+
+        if (fabExpanded) {
+            buttonContainer.style.display = 'flex';
+            fabButton.innerHTML = '\u2715'; // ✕
+        } else {
+            buttonContainer.style.display = 'none';
+            fabButton.innerHTML = '\u2630'; // ☰
+
+            // Close any open panel and deactivate toggle buttons
+            const allPanels = document.querySelectorAll('.collapsible-panel');
+            allPanels.forEach(p => { p.style.display = 'none'; });
+
+            const allToggleBtns = buttonContainer.querySelectorAll('[data-btn-id^="toggle-"]');
+            allToggleBtns.forEach(btn => { btn.classList.remove('active'); });
+        }
+    });
 
     buttons.forEach(btn => {
-        const button = L.DomUtil.create('button', 'map-control-btn', buttonContainer);
+        const button = L.DomUtil.create('button', 'map-ctrl-btn', buttonContainer);
         button.innerHTML = btn.icon;
         button.title = btn.title;
         button.setAttribute('data-btn-id', btn.id);
-        button.style.cssText = `
-            width: 36px;
-            height: 36px;
-            min-width: 36px;
-            min-height: 36px;
-            max-width: 36px;
-            max-height: 36px;
-            border: 1px solid rgba(255,255,255,1.0);
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            line-height: 1;
-            color: white;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            overflow: hidden;
-            box-sizing: border-box;
-            padding: 0;
-            transition: all 0.3s ease;
-        `;
 
         // Store button reference for toggle state
         if (btn.isToggle) {
             btn.buttonElement = button;
-
-            // Set initial state for mouse zoom toggle (disabled by default)
-            if (btn.id === 'toggle-mouse-zoom' && callbacks.mouseZoomEnabled !== undefined && !callbacks.mouseZoomEnabled) {
-                button.classList.remove('active');
-                button.style.background = 'rgba(0, 0, 0, 0.8)';
-                button.style.color = 'white';
-                button.style.borderColor = 'rgba(255,255,255,1.0)';
-            }
         }
-
-        // Hover effects
-        button.addEventListener('mouseenter', () => {
-            if (button.classList.contains('active')) {
-                // Lighter green on hover when active
-                button.style.background = 'rgba(76, 175, 80, 1.0)';
-                button.style.borderColor = 'rgba(76, 175, 80, 1.0)';
-            } else {
-                // White on hover when inactive
-                button.style.background = 'rgba(255, 255, 255, 0.8)';
-                button.style.borderColor = 'rgba(0,0,0,1.0)';
-                button.style.color = 'black';
-            }
-            button.style.transform = 'scale(1.05)';
-        });
-        button.addEventListener('mouseleave', () => {
-            if (button.classList.contains('active')) {
-                // Restore active green state
-                button.style.background = 'rgba(76, 175, 80, 0.8)';
-                button.style.borderColor = 'rgba(76, 175, 80, 1.0)';
-                button.style.color = 'white';
-            } else {
-                // Restore inactive dark state
-                button.style.background = 'rgba(0, 0, 0, 0.8)';
-                button.style.borderColor = 'rgba(255,255,255,1.0)';
-                button.style.color = 'white';
-            }
-            button.style.transform = 'scale(1)';
-        });
 
         // Click handler
         L.DomEvent.on(button, 'click', function(e) {
             L.DomEvent.stopPropagation(e);
             btn.action();
-            // One-time action buttons: reset to default state immediately
             if (!btn.isToggle) {
                 button.blur();
-                button.style.background = 'rgba(0, 0, 0, 0.8)';
-                button.style.borderColor = 'rgba(255,255,255,1.0)';
-                button.style.color = 'white';
-                button.style.transform = 'scale(1)';
             }
         });
     });
 
     return controlContainer;
 }
+
+// ==================== Panels ====================
 
 /**
  * Create collapsible panels for routes, overlays, map views, and privacy
@@ -236,30 +205,88 @@ export function createCollapsiblePanels(map, overlayState, callbacks, privacySta
  * @returns {object} Panel elements
  */
 function createPanel(map, id) {
-    const panel = L.DomUtil.create('div', 'collapsible-panel', map.getContainer());
+    const panel = L.DomUtil.create('div', 'map-panel collapsible-panel', map.getContainer());
     panel.id = id;
-    panel.style.cssText = `
-        position: absolute;
-        top: 55px;
-        right: 10px;
-        z-index: 999;
-        background: rgba(0, 0, 0, 0.85);
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-radius: 12px;
-        padding: 16px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        display: none;
-        width: 280px;
-        max-width: calc(100% - 20px);
-        max-height: calc(100% - 65px);
-        overflow-y: auto;
-    `;
 
     // Prevent map interactions when clicking panel
     L.DomEvent.disableClickPropagation(panel);
     L.DomEvent.disableScrollPropagation(panel);
 
     return { panel };
+}
+
+// ==================== Route Panel ====================
+
+/**
+ * Create route button group for a set of route overlays
+ * @param {HTMLElement} container - Parent element
+ * @param {string} groupName - Group display name
+ * @param {Array} routes - Route config objects for this group
+ * @param {object} buttonMap - Map to store button references { id: element }
+ * @param {object} legendMap - Map to store legend div references { id: element }
+ * @param {object} overlayState - Overlay visibility state
+ * @param {Array} allRouteIds - All route IDs (for radio behavior)
+ * @param {Function} updateCallback - Route overlay update callback
+ * @param {Function} onLegendUpdate - Legend update callback
+ * @param {Function} updateAllButtonStates - State refresh callback
+ */
+function createRouteButtonGroup(container, groupName, routes, buttonMap, legendMap,
+                                 overlayState, allRouteIds, updateCallback, onLegendUpdate, updateAllButtonStates) {
+    // Group header
+    const groupHeader = L.DomUtil.create('div', 'route-group-header', container);
+    groupHeader.textContent = groupName;
+    groupHeader.style.cssText = `
+        font-size: 10px;
+        font-weight: bold;
+        color: var(--map-ctrl-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 8px 0 4px 2px;
+    `;
+
+    for (const cfg of routes) {
+        const button = L.DomUtil.create('button', 'map-panel-btn', container);
+        button.innerHTML = `${cfg.icon} ${cfg.label}`;
+        button.setAttribute('data-route', cfg.id);
+        if (overlayState[cfg.id]) button.classList.add('active');
+
+        L.DomEvent.on(button, 'click', function(e) {
+            L.DomEvent.stopPropagation(e);
+            if (button.disabled) return;
+
+            // Radio behavior: turn off all, turn on selected
+            for (const id of allRouteIds) {
+                overlayState[id] = (id === cfg.id);
+            }
+
+            updateAllButtonStates();
+
+            // Update route visibility
+            for (const id of allRouteIds) {
+                updateCallback(id, overlayState[id]);
+            }
+
+            // Update legend
+            if (onLegendUpdate) onLegendUpdate(cfg.id);
+
+            console.log(`[UI CONTROLS] Switched to ${cfg.label}`);
+        });
+
+        buttonMap[cfg.id] = button;
+
+        // Inline legend div — hidden by default, shown when this overlay is active
+        const legendDiv = L.DomUtil.create('div', 'route-inline-legend', container);
+        legendDiv.setAttribute('data-legend-id', cfg.id);
+        legendDiv.style.cssText = `
+            display: ${overlayState[cfg.id] ? 'block' : 'none'};
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            background: var(--map-ctrl-info-bg);
+            border-radius: 4px;
+        `;
+        legendDiv.innerHTML = '';
+        legendMap[cfg.id] = legendDiv;
+    }
 }
 
 /**
@@ -272,18 +299,7 @@ function createPanel(map, id) {
 function createRoutePanelContent(overlayState, updateCallback, onLegendUpdate) {
     const container = document.createElement('div');
 
-    // Panel header
-    const header = L.DomUtil.create('div', 'panel-header', container);
-    header.innerHTML = '\u{1F6E4}\uFE0F Route Overlays';
-    header.style.cssText = `
-        font-size: 14px;
-        font-weight: bold;
-        color: white;
-        text-align: center;
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
-    `;
+    createPanelHeader(container, '\u{1F6E4}\uFE0F', 'Route Overlays');
 
     // Read config
     const routeConfig = window.EUCOverlayConfig?.routes || {};
@@ -303,104 +319,31 @@ function createRoutePanelContent(overlayState, updateCallback, onLegendUpdate) {
         grouped[group].sort((a, b) => (a.order || 0) - (b.order || 0));
     }
 
-    // Track all buttons for state updates
+    // Track all buttons and legend divs for state updates
     const buttonMap = {}; // { overlayId: buttonElement }
+    const legendMap = {}; // { overlayId: legendDivElement }
 
-    // Helper to update all button visual states
+    // Helper to update all button visual states via CSS classes
     function updateAllButtonStates() {
         for (const [id, btn] of Object.entries(buttonMap)) {
             const isActive = overlayState[id];
-            const isDisabled = btn.disabled;
-            if (isDisabled) {
-                btn.style.background = 'rgba(255, 255, 255, 0.05)';
-                btn.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                btn.style.opacity = '0.3';
+            if (isActive) {
+                btn.classList.add('active');
             } else {
-                btn.style.background = isActive ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)';
-                btn.style.borderColor = isActive ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)';
-                btn.style.opacity = '1';
+                btn.classList.remove('active');
             }
+        }
+        // Show/hide legend divs based on active state
+        for (const [id, legendDiv] of Object.entries(legendMap)) {
+            legendDiv.style.display = overlayState[id] ? 'block' : 'none';
         }
     }
 
     // Render groups in configured order
     const orderedGroups = routeGroups.filter(g => grouped[g]);
     for (const groupName of orderedGroups) {
-        // Group header
-        const groupHeader = L.DomUtil.create('div', 'route-group-header', container);
-        groupHeader.textContent = groupName;
-        groupHeader.style.cssText = `
-            font-size: 10px;
-            font-weight: bold;
-            color: rgba(255,255,255,0.5);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 8px 0 4px 2px;
-        `;
-
-        for (const cfg of grouped[groupName]) {
-            const button = L.DomUtil.create('button', 'route-btn', container);
-            button.innerHTML = `${cfg.icon} ${cfg.label}`;
-            button.setAttribute('data-route', cfg.id);
-
-            const isActive = overlayState[cfg.id];
-            button.style.cssText = `
-                width: 100%;
-                padding: 7px;
-                margin-bottom: 4px;
-                background: ${isActive ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
-                border: 2px solid ${isActive ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)'};
-                border-radius: 6px;
-                color: white;
-                font-size: 13px;
-                font-weight: bold;
-                cursor: pointer;
-                text-align: left;
-                transition: all 0.2s ease;
-            `;
-
-            button.addEventListener('mouseenter', () => {
-                if (button.disabled) return;
-                const isCurrentlyActive = overlayState[cfg.id];
-                if (!isCurrentlyActive) {
-                    button.style.background = 'rgba(255, 255, 255, 0.2)';
-                    button.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-                }
-            });
-
-            button.addEventListener('mouseleave', () => {
-                if (button.disabled) return;
-                const isCurrentlyActive = overlayState[cfg.id];
-                if (!isCurrentlyActive) {
-                    button.style.background = 'rgba(255, 255, 255, 0.1)';
-                    button.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                }
-            });
-
-            L.DomEvent.on(button, 'click', function(e) {
-                L.DomEvent.stopPropagation(e);
-                if (button.disabled) return;
-
-                // Radio behavior: turn off all, turn on selected
-                for (const id of allRouteIds) {
-                    overlayState[id] = (id === cfg.id);
-                }
-
-                updateAllButtonStates();
-
-                // Update route visibility
-                for (const id of allRouteIds) {
-                    updateCallback(id, overlayState[id]);
-                }
-
-                // Update legend
-                if (onLegendUpdate) onLegendUpdate(cfg.id);
-
-                console.log(`[UI CONTROLS] Switched to ${cfg.label}`);
-            });
-
-            buttonMap[cfg.id] = button;
-        }
+        createRouteButtonGroup(container, groupName, grouped[groupName], buttonMap, legendMap,
+                                overlayState, allRouteIds, updateCallback, onLegendUpdate, updateAllButtonStates);
     }
 
     /**
@@ -441,8 +384,53 @@ function createRoutePanelContent(overlayState, updateCallback, onLegendUpdate) {
         updateAllButtonStates();
     }
 
-    return { container, updateAvailability };
+    /**
+     * Update the inline legend for the active overlay.
+     * @param {object|null} stats - { min, max, config } from routeRenderer.getActiveOverlayStats()
+     */
+    function updateLegend(stats) {
+        if (!stats || !stats.config) {
+            // Hide all legend divs
+            for (const legendDiv of Object.values(legendMap)) {
+                legendDiv.style.display = 'none';
+            }
+            return;
+        }
+
+        const cfg = stats.config;
+
+        // Determine min/max labels
+        let minLabel, maxLabel;
+        if (cfg.legendLabels) {
+            minLabel = cfg.legendLabels[0];
+            maxLabel = cfg.legendLabels[cfg.legendLabels.length - 1];
+        } else {
+            minLabel = stats.min.toFixed(cfg.decimals) + cfg.unit;
+            maxLabel = stats.max.toFixed(cfg.decimals) + cfg.unit;
+        }
+
+        // Update the legend div for this overlay
+        const legendDiv = legendMap[cfg.id];
+        if (legendDiv) {
+            legendDiv.innerHTML = `
+                <div style="height: 12px; border-radius: 3px; background: ${cfg.legendGradient}; margin-bottom: 4px;"></div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--map-ctrl-text);">
+                    <span>${minLabel}</span>
+                    <span>${maxLabel}</span>
+                </div>
+            `;
+        }
+
+        // Show/hide based on active state
+        for (const [id, div] of Object.entries(legendMap)) {
+            div.style.display = overlayState[id] ? 'block' : 'none';
+        }
+    }
+
+    return { container, updateAvailability, updateLegend };
 }
+
+// ==================== Overlay Panel ====================
 
 /**
  * Create overlay panel content
@@ -453,56 +441,18 @@ function createRoutePanelContent(overlayState, updateCallback, onLegendUpdate) {
 function createOverlayPanelContent(overlayState, updateCallback) {
     const container = document.createElement('div');
 
-    // Panel header
-    const header = L.DomUtil.create('div', 'panel-header', container);
-    header.innerHTML = '📍 Marker Overlays';
-    header.style.cssText = `
-        font-size: 14px;
-        font-weight: bold;
-        color: white;
-        text-align: center;
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
-    `;
+    createPanelHeader(container, '\uD83D\uDCCD', 'Marker Overlays');
 
     // Button row: Pulse toggle + All On/Off
     const buttonRow = L.DomUtil.create('div', 'all-buttons-row', container);
-    buttonRow.style.cssText = `
-        display: flex;
-        gap: 8px;
-        margin-bottom: 12px;
-    `;
+    buttonRow.style.cssText = 'display: flex; gap: 8px; margin-bottom: 12px;';
 
     // Pulse toggle button — reads/writes body class + localStorage (no map state needed)
     const pulseActive = document.body.classList.contains('marker-animations-enabled');
-    const pulseBtn = L.DomUtil.create('button', 'pulse-toggle-btn', buttonRow);
-    pulseBtn.innerHTML = 'Pulse 💫';
-    pulseBtn.style.cssText = `
-        flex: 1;
-        padding: 6px;
-        background: ${pulseActive ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
-        border: 2px solid ${pulseActive ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)'};
-        border-radius: 6px;
-        color: white;
-        font-size: 12px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    `;
-
-    pulseBtn.addEventListener('mouseenter', () => {
-        const isOn = document.body.classList.contains('marker-animations-enabled');
-        if (!isOn) {
-            pulseBtn.style.background = 'rgba(255, 255, 255, 0.2)';
-            pulseBtn.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-        }
-    });
-    pulseBtn.addEventListener('mouseleave', () => {
-        const isOn = document.body.classList.contains('marker-animations-enabled');
-        pulseBtn.style.background = isOn ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)';
-        pulseBtn.style.borderColor = isOn ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)';
-    });
+    const pulseBtn = L.DomUtil.create('button', 'map-panel-btn', buttonRow);
+    pulseBtn.innerHTML = 'Pulse \uD83D\uDCAB';
+    pulseBtn.style.cssText = 'flex: 1; width: auto; text-align: center; font-size: 12px;';
+    if (pulseActive) pulseBtn.classList.add('active');
 
     L.DomEvent.on(pulseBtn, 'click', function(e) {
         L.DomEvent.stopPropagation(e);
@@ -514,81 +464,41 @@ function createOverlayPanelContent(overlayState, updateCallback) {
             document.body.classList.remove('marker-animations-enabled');
             localStorage.setItem('markerPulse', 'false');
         }
-        pulseBtn.style.background = nowActive ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)';
-        pulseBtn.style.borderColor = nowActive ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)';
+        pulseBtn.classList.toggle('active', nowActive);
         console.log(`[UI CONTROLS] Marker pulse ${nowActive ? 'enabled' : 'disabled'}`);
     });
 
-    const allOnBtn = L.DomUtil.create('button', 'all-on-btn', buttonRow);
+    const allOnBtn = L.DomUtil.create('button', 'map-panel-btn', buttonRow);
     allOnBtn.innerHTML = 'All On';
-    allOnBtn.style.cssText = `
-        flex: 1;
-        padding: 6px;
-        background: rgba(76, 175, 80, 0.3);
-        border: 2px solid rgba(76, 175, 80, 0.8);
-        border-radius: 6px;
-        color: white;
-        font-size: 12px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    `;
+    allOnBtn.style.cssText = 'flex: 1; width: auto; text-align: center; font-size: 12px;';
 
-    const allOffBtn = L.DomUtil.create('button', 'all-off-btn', buttonRow);
+    const allOffBtn = L.DomUtil.create('button', 'map-panel-btn', buttonRow);
     allOffBtn.innerHTML = 'All Off';
-    allOffBtn.style.cssText = `
-        flex: 1;
-        padding: 6px;
-        background: rgba(244, 67, 54, 0.3);
-        border: 2px solid rgba(244, 67, 54, 0.8);
-        border-radius: 6px;
-        color: white;
-        font-size: 12px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    `;
-
-    // Hover effects for buttons
-    allOnBtn.addEventListener('mouseenter', () => {
-        allOnBtn.style.background = 'rgba(76, 175, 80, 0.5)';
-    });
-    allOnBtn.addEventListener('mouseleave', () => {
-        allOnBtn.style.background = 'rgba(76, 175, 80, 0.3)';
-    });
-    allOffBtn.addEventListener('mouseenter', () => {
-        allOffBtn.style.background = 'rgba(244, 67, 54, 0.5)';
-    });
-    allOffBtn.addEventListener('mouseleave', () => {
-        allOffBtn.style.background = 'rgba(244, 67, 54, 0.3)';
-    });
+    allOffBtn.style.cssText = 'flex: 1; width: auto; text-align: center; font-size: 12px;';
 
     // Marker overlays (icons match overlay-config.js - single source of truth)
     const overlays = [
-        { id: 'maxSpeed', label: 'Max Speed', icon: '🚀' },
-        { id: 'zeroSafety', label: 'Critical Safety', icon: '💀' },
-        { id: 'maxElevation', label: 'Max Elevation', icon: '🏔️' },
-        { id: 'minElevation', label: 'Min Elevation', icon: '⛰️' },
-        { id: 'maxControllerTemp', label: 'Max Controller Temp', icon: '🌡️' },
-        { id: 'maxMotorTemp', label: 'Max Motor Temp', icon: '🌡️' },
-        { id: 'maxBatteryTemp', label: 'Max Battery Temp', icon: '🌡️' },
-        { id: 'maxPower', label: 'Max Power', icon: '🔌' },
-        { id: 'maxCurrent', label: 'Max Current', icon: '⚡' },
-        { id: 'minBattery', label: 'Battery Min', icon: '🪫' },
-        { id: 'safetyMarginMin', label: 'PWM Min', icon: '🛡️' },
-        { id: 'minVoltage', label: 'Voltage Min', icon: '⚡' },
-        { id: 'maxTilt', label: 'Max Tilt', icon: '↗️' },
-        { id: 'minTilt', label: 'Min Tilt', icon: '↙️' },
-        { id: 'maxRoll', label: 'Max Roll', icon: '↪️' },
-        { id: 'minRoll', label: 'Min Roll', icon: '↩️' }
+        { id: 'maxSpeed', label: 'Max Speed', icon: '\uD83D\uDE80' },
+        { id: 'zeroSafety', label: 'Critical Safety', icon: '\uD83D\uDC80' },
+        { id: 'maxElevation', label: 'Max Elevation', icon: '\uD83C\uDFD4\uFE0F' },
+        { id: 'minElevation', label: 'Min Elevation', icon: '\u26F0\uFE0F' },
+        { id: 'maxControllerTemp', label: 'Max Controller Temp', icon: '\uD83C\uDF21\uFE0F' },
+        { id: 'maxMotorTemp', label: 'Max Motor Temp', icon: '\uD83C\uDF21\uFE0F' },
+        { id: 'maxBatteryTemp', label: 'Max Battery Temp', icon: '\uD83C\uDF21\uFE0F' },
+        { id: 'maxPower', label: 'Max Power', icon: '\uD83D\uDD0C' },
+        { id: 'maxCurrent', label: 'Max Current', icon: '\u26A1' },
+        { id: 'minBattery', label: 'Battery Min', icon: '\uD83E\uDEAB' },
+        { id: 'safetyMarginMin', label: 'PWM Min', icon: '\uD83D\uDEE1\uFE0F' },
+        { id: 'minVoltage', label: 'Voltage Min', icon: '\u26A1' },
+        { id: 'maxTilt', label: 'Max Tilt', icon: '\u2197\uFE0F' },
+        { id: 'minTilt', label: 'Min Tilt', icon: '\u2199\uFE0F' },
+        { id: 'maxRoll', label: 'Max Roll', icon: '\u21AA\uFE0F' },
+        { id: 'minRoll', label: 'Min Roll', icon: '\u21A9\uFE0F' }
     ];
 
     // Create scrollable container for marker list
     const scrollContainer = L.DomUtil.create('div', 'marker-scroll-container', container);
-    scrollContainer.style.cssText = `
-        overflow-x: hidden;
-        padding-right: 4px;
-    `;
+    scrollContainer.style.cssText = 'overflow-x: hidden; padding-right: 4px;';
 
     overlays.forEach(overlay => {
         const toggleContainer = createToggleRow(overlay.label, overlay.icon, overlayState[overlay.id], (checked) => {
@@ -606,12 +516,11 @@ function createOverlayPanelContent(overlayState, updateCallback) {
             updateCallback(overlay.id, true);
         });
         // Update all rows and checkboxes
-        scrollContainer.querySelectorAll('.toggle-row').forEach(row => {
+        scrollContainer.querySelectorAll('.map-toggle-row').forEach(row => {
             const checkbox = row.querySelector('input[type="checkbox"]');
             if (checkbox) {
                 checkbox.checked = true;
-                row.style.background = 'rgba(76, 175, 80, 0.3)';
-                row.style.borderColor = 'rgba(76, 175, 80, 0.8)';
+                row.classList.add('active');
             }
         });
         console.log('[UI CONTROLS] All marker overlays enabled');
@@ -625,12 +534,11 @@ function createOverlayPanelContent(overlayState, updateCallback) {
             updateCallback(overlay.id, false);
         });
         // Update all rows and checkboxes
-        scrollContainer.querySelectorAll('.toggle-row').forEach(row => {
+        scrollContainer.querySelectorAll('.map-toggle-row').forEach(row => {
             const checkbox = row.querySelector('input[type="checkbox"]');
             if (checkbox) {
                 checkbox.checked = false;
-                row.style.background = 'rgba(255, 255, 255, 0.1)';
-                row.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                row.classList.remove('active');
             }
         });
         console.log('[UI CONTROLS] All marker overlays disabled');
@@ -638,6 +546,8 @@ function createOverlayPanelContent(overlayState, updateCallback) {
 
     return container;
 }
+
+// ==================== Map Views Panel ====================
 
 /**
  * Create map views panel content
@@ -648,84 +558,37 @@ function createOverlayPanelContent(overlayState, updateCallback) {
 function createMapViewsPanelContent(setMapLayer, getCurrentLayer) {
     const container = document.createElement('div');
 
-    // Panel header
-    const header = L.DomUtil.create('div', 'panel-header', container);
-    header.innerHTML = '🗺 Map Views';
-    header.style.cssText = `
-        font-size: 14px;
-        font-weight: bold;
-        color: white;
-        text-align: center;
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
-    `;
+    createPanelHeader(container, '\uD83D\uDDFA', 'Map Views');
 
     // Map layer buttons
     const layers = [
-        { id: 'street', label: 'Street', icon: '🏙️' },
-        { id: 'grayscale', label: 'Grayscale', icon: '⬜' },
-        { id: 'satellite', label: 'Satellite', icon: '🛰️' },
-        { id: 'cyclosm', label: 'CyclOSM', icon: '🚴' },
-        { id: 'transport', label: 'Transport', icon: '🚊' },
-        { id: 'topo', label: 'Topographic', icon: '🗻' },
-        { id: 'humanitarian', label: 'Humanitarian', icon: '🏥' },
-        { id: 'dark', label: 'Dark', icon: '🌙' },
-        { id: 'terrain', label: 'Terrain', icon: '🏔️' }
+        { id: 'street', label: 'Street', icon: '\uD83C\uDFD9\uFE0F' },
+        { id: 'grayscale', label: 'Grayscale', icon: '\u2B1C' },
+        { id: 'satellite', label: 'Satellite', icon: '\uD83D\uDEF0\uFE0F' },
+        { id: 'cyclosm', label: 'CyclOSM', icon: '\uD83D\uDEB4' },
+        { id: 'transport', label: 'Transport', icon: '\uD83D\uDE8A' },
+        { id: 'topo', label: 'Topographic', icon: '\uD83D\uDDFB' },
+        { id: 'humanitarian', label: 'Humanitarian', icon: '\uD83C\uDFE5' },
+        { id: 'dark', label: 'Dark', icon: '\uD83C\uDF19' },
+        { id: 'terrain', label: 'Terrain', icon: '\uD83C\uDFD4\uFE0F' }
     ];
 
     const currentLayer = getCurrentLayer();
 
     layers.forEach(layer => {
-        const button = L.DomUtil.create('button', 'layer-btn', container);
+        const button = L.DomUtil.create('button', 'map-panel-btn', container);
         button.innerHTML = `${layer.icon} ${layer.label}`;
         button.setAttribute('data-layer', layer.id);
+        button.style.marginBottom = '6px';
 
-        // Check if this is the current layer
-        const isActive = layer.id === currentLayer;
-
-        button.style.cssText = `
-            width: 100%;
-            padding: 7px;
-            margin-bottom: 6px;
-            background: ${isActive ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
-            border: 2px solid ${isActive ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)'};
-            border-radius: 6px;
-            color: white;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.2s ease;
-        `;
-
-        button.addEventListener('mouseenter', () => {
-            // Check if this button is currently active (has green border)
-            const isCurrentlyActive = button.style.borderColor.includes('80, 0.8');
-            if (!isCurrentlyActive) {
-                button.style.background = 'rgba(255, 255, 255, 0.2)';
-                button.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-            }
-        });
-
-        button.addEventListener('mouseleave', () => {
-            // Check if this button is currently active (has green border)
-            const isCurrentlyActive = button.style.borderColor.includes('80, 0.8');
-            if (!isCurrentlyActive) {
-                button.style.background = 'rgba(255, 255, 255, 0.1)';
-                button.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-            }
-        });
+        if (layer.id === currentLayer) button.classList.add('active');
 
         L.DomEvent.on(button, 'click', function(e) {
             L.DomEvent.stopPropagation(e);
 
-            // Update all button states
-            container.querySelectorAll('.layer-btn').forEach(btn => {
-                const btnLayer = btn.getAttribute('data-layer');
-                const btnIsActive = btnLayer === layer.id;
-                btn.style.background = btnIsActive ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)';
-                btn.style.borderColor = btnIsActive ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)';
+            // Update all button states — radio behavior
+            container.querySelectorAll('.map-panel-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-layer') === layer.id);
             });
 
             setMapLayer(layer.id);
@@ -736,6 +599,8 @@ function createMapViewsPanelContent(setMapLayer, getCurrentLayer) {
     return container;
 }
 
+// ==================== Toggle Row ====================
+
 /**
  * Create a toggle row for overlays
  * @param {string} label - Toggle label
@@ -745,63 +610,31 @@ function createMapViewsPanelContent(setMapLayer, getCurrentLayer) {
  * @returns {HTMLElement} Toggle row element
  */
 function createToggleRow(label, icon, checked, onChange) {
-    const container = L.DomUtil.create('div', 'toggle-row');
-    container.style.cssText = `
-        width: 100%;
-        padding: 10px;
-        margin-bottom: 4px;
-        background: ${checked ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)'};
-        border: 2px solid ${checked ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)'};
-        border-radius: 6px;
-        color: white;
-        font-size: 13px;
-        font-weight: bold;
-        cursor: pointer;
-        text-align: left;
-        transition: all 0.2s ease;
-    `;
+    const container = L.DomUtil.create('div', 'map-toggle-row');
+    if (checked) container.classList.add('active');
 
     // Hidden checkbox for state tracking
     const checkbox = L.DomUtil.create('input', '', container);
     checkbox.type = 'checkbox';
     checkbox.checked = checked;
-    checkbox.style.cssText = `
-        display: none;
-    `;
+    checkbox.style.display = 'none';
 
     // Label text
     const labelSpan = L.DomUtil.create('span', '', container);
     labelSpan.innerHTML = `${icon} ${label}`;
 
-    // Update visual state function
-    const updateVisualState = () => {
-        const isChecked = checkbox.checked;
-        container.style.background = isChecked ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 255, 255, 0.1)';
-        container.style.borderColor = isChecked ? 'rgba(76, 175, 80, 0.8)' : 'rgba(255, 255, 255, 0.3)';
-    };
-
-    container.addEventListener('mouseenter', () => {
-        // Check if currently active (has green border)
-        const isCurrentlyActive = container.style.borderColor.includes('80, 0.8');
-        if (!isCurrentlyActive) {
-            container.style.background = 'rgba(255, 255, 255, 0.2)';
-            container.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-        }
-    });
-    container.addEventListener('mouseleave', () => {
-        updateVisualState();
-    });
-
     // Make entire container clickable
     L.DomEvent.on(container, 'click', function(e) {
         L.DomEvent.stopPropagation(e);
         checkbox.checked = !checkbox.checked;
-        updateVisualState();
+        container.classList.toggle('active', checkbox.checked);
         onChange(checkbox.checked);
     });
 
     return container;
 }
+
+// ==================== Panel Toggle ====================
 
 /**
  * Toggle panel visibility
@@ -809,47 +642,27 @@ function createToggleRow(label, icon, checked, onChange) {
  * @param {HTMLElement} button - Toggle button element
  */
 export function togglePanel(panel, button) {
-    const isVisible = panel.style.display !== 'none';
+    const isVisible = panel.style.display === 'block';
 
     if (isVisible) {
         // Close this panel
         panel.style.display = 'none';
-        if (button) {
-            button.classList.remove('active');
-            button.style.background = 'rgba(0, 0, 0, 0.8)';
-            button.style.borderColor = 'rgba(255,255,255,1.0)';
-            button.style.color = 'white';
-        }
+        if (button) button.classList.remove('active');
     } else {
         // Close all other panels first
         const allPanels = document.querySelectorAll('.collapsible-panel');
         const allButtons = document.querySelectorAll('[data-btn-id^="toggle-"]');
 
-        allPanels.forEach(p => {
-            if (p !== panel) {
-                p.style.display = 'none';
-            }
-        });
-
-        allButtons.forEach(btn => {
-            if (btn !== button && btn.classList.contains('active')) {
-                btn.classList.remove('active');
-                btn.style.background = 'rgba(0, 0, 0, 0.8)';
-                btn.style.borderColor = 'rgba(255,255,255,1.0)';
-                btn.style.color = 'white';
-            }
-        });
+        allPanels.forEach(p => { if (p !== panel) p.style.display = 'none'; });
+        allButtons.forEach(btn => { if (btn !== button) btn.classList.remove('active'); });
 
         // Open this panel
         panel.style.display = 'block';
-        if (button) {
-            button.classList.add('active');
-            button.style.background = 'rgba(255, 255, 255, 0.9)';
-            button.style.borderColor = 'rgba(0,0,0,1.0)';
-            button.style.color = 'black';
-        }
+        if (button) button.classList.add('active');
     }
 }
+
+// ==================== Map Layer ====================
 
 /**
  * Set map layer
@@ -874,81 +687,4 @@ export function setMapLayer(layerType, map, mapLayers) {
     } else {
         console.warn(`[UI CONTROLS] Layer ${layerType} not found`);
     }
-}
-
-/**
- * Create route legend Leaflet control (bottom-right).
- * Shows active overlay name, color gradient bar, and min/max values.
- * @param {object} map - Leaflet map instance
- * @returns {object} { update(overlayId, routeRenderer), hide() }
- */
-export function createRouteLegend(map) {
-    const LegendControl = L.Control.extend({
-        options: { position: 'bottomright' },
-
-        onAdd: function() {
-            const div = L.DomUtil.create('div', 'route-legend-control');
-            div.style.cssText = `
-                background: rgba(0, 0, 0, 0.75);
-                border: 1px solid rgba(255, 255, 255, 0.3);
-                border-radius: 8px;
-                padding: 8px 12px;
-                color: white;
-                font-size: 12px;
-                min-width: 140px;
-                max-width: 200px;
-                display: none;
-                pointer-events: auto;
-            `;
-            L.DomEvent.disableClickPropagation(div);
-            this._container = div;
-            return div;
-        }
-    });
-
-    const control = new LegendControl();
-    control.addTo(map);
-
-    return {
-        update(overlayId, routeRenderer) {
-            const container = control._container;
-            if (!container) return;
-
-            const stats = routeRenderer.getActiveOverlayStats();
-            if (!stats || !stats.config) {
-                container.style.display = 'none';
-                return;
-            }
-
-            const cfg = stats.config;
-            const min = stats.min;
-            const max = stats.max;
-
-            // Use legendLabels if defined, otherwise show data min/max
-            let minLabel, maxLabel;
-            if (cfg.legendLabels) {
-                minLabel = cfg.legendLabels[0];
-                maxLabel = cfg.legendLabels[cfg.legendLabels.length - 1];
-            } else {
-                minLabel = min.toFixed(cfg.decimals) + cfg.unit;
-                maxLabel = max.toFixed(cfg.decimals) + cfg.unit;
-            }
-
-            container.innerHTML = `
-                <div style="font-weight: bold; margin-bottom: 4px;">${cfg.icon} ${cfg.label}</div>
-                <div style="height: 12px; border-radius: 3px; background: ${cfg.legendGradient}; margin-bottom: 4px;"></div>
-                <div style="display: flex; justify-content: space-between; font-size: 10px; opacity: 0.8;">
-                    <span>${minLabel}</span>
-                    <span>${maxLabel}</span>
-                </div>
-            `;
-            container.style.display = 'block';
-        },
-
-        hide() {
-            if (control._container) {
-                control._container.style.display = 'none';
-            }
-        }
-    };
 }

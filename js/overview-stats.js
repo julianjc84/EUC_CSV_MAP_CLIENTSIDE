@@ -172,8 +172,8 @@ export function calculateOverviewStats(data, { detectedMode, flipPWM }) {
     }
 
     // Device Info
-    stats.push({ label: '🎖️ Make', value: metadata.make || 'N/A', group: 'device', isZeroOrNA: !metadata.make });
-    stats.push({ label: '🛞 Model', value: metadata.model || 'N/A', group: 'device', isZeroOrNA: !metadata.model });
+    stats.push({ label: '🎖️ Make', value: metadata.make || 'N/A', group: 'device', isZeroOrNA: !metadata.make || metadata.make === 'N/A' });
+    stats.push({ label: '🛞 Model', value: metadata.model || 'N/A', group: 'device', isZeroOrNA: !metadata.model || metadata.model === 'N/A' });
 
     // Odometer
     if (rideStats.odometer) {
@@ -205,6 +205,8 @@ export function calculateOverviewStats(data, { detectedMode, flipPWM }) {
     stats.push(formatStat('⚡ Avg Power', rideStats.power?.avg, ' W', 'power', { decimals: 0 }));
     stats.push(formatStat('🔋 Max Current', rideStats.current?.max?.value, ' A', 'electrical'));
     stats.push(formatStat('🔋 Avg Current', rideStats.current?.avg, ' A', 'electrical'));
+    stats.push(formatStat('🔋 Max Phase Current', rideStats.currentPhase?.max?.value, ' A', 'electrical'));
+    stats.push(formatStat('🔋 Avg Phase Current', rideStats.currentPhase?.avg, ' A', 'electrical'));
     stats.push(formatStat('🔋 Battery Min', rideStats.battery?.min?.value, '%', 'electrical'));
 
     // PWM (special — uses label from rideStats, has isNegative flag)
@@ -229,6 +231,8 @@ export function calculateOverviewStats(data, { detectedMode, flipPWM }) {
     stats.push(formatStat('🌡️ Controller Temp Max', rideStats.tempController?.max?.value, '°C', 'temperature'));
     stats.push(formatStat('🌡️ Motor Temp Max', rideStats.tempMotor?.max?.value, '°C', 'temperature'));
     stats.push(formatStat('🌡️ Battery Temp Max', rideStats.tempBattery?.max?.value, '°C', 'temperature'));
+    stats.push(formatStat('🌡️ CPU Temp Max', rideStats.tempCPU?.max?.value, '°C', 'temperature'));
+    stats.push(formatStat('🌡️ IMU Temp Max', rideStats.tempIMU?.max?.value, '°C', 'temperature'));
 
     // GROUP 5: Tilt, Roll, Elevation
     stats.push(...formatMinMaxDiff('↗️', '↙️', '🔄', 'Tilt', '°', 'orientation', rideStats.tilt));

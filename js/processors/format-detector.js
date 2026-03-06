@@ -14,6 +14,9 @@ export class FormatDetector {
 
         try {
             // Get first line (header)
+            // NOTE: All header matching is case-sensitive. If a CSV has uppercase or
+            // mixed-case headers (e.g. from Excel editing), detection will fail.
+            // This is intentional for now — the processors also expect exact casing.
             const firstLine = csvContent.split('\n')[0];
             const columns = firstLine.split(',').map(col => col.trim());
 

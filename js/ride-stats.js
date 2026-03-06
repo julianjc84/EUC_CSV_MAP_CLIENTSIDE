@@ -223,6 +223,14 @@ export function calculateRideStats(fullData, options = {}) {
         };
     }
 
+    // Phase Current
+    if (series.current_phase) {
+        stats.currentPhase = {
+            max: calculateMetricStats(series.current_phase, { findMin: false }),
+            avg: calculateMetricStats(series.current_phase, { findMin: false }).avg
+        };
+    }
+
     // Battery
     if (series.battery || series.battery_level) {
         const batteryData = series.battery || series.battery_level;
@@ -292,6 +300,20 @@ export function calculateRideStats(fullData, options = {}) {
     if (series.temp_batt) {
         stats.tempBattery = {
             max: calculateMetricStats(series.temp_batt, { findMin: false })
+        };
+    }
+
+    // CPU Temperature
+    if (series.temp_cpu) {
+        stats.tempCPU = {
+            max: calculateMetricStats(series.temp_cpu, { findMin: false })
+        };
+    }
+
+    // IMU Temperature
+    if (series.temp_imu) {
+        stats.tempIMU = {
+            max: calculateMetricStats(series.temp_imu, { findMin: false })
         };
     }
 

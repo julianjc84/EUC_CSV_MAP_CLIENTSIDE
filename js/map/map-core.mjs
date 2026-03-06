@@ -14,7 +14,7 @@ import { createPrivacyFilter } from './privacy-filter.mjs';
 import { createPopupManager } from './popup-manager.mjs';
 import { createRouteRenderer } from './route-renderer.mjs';
 import { createPositionTracker } from './position-tracker.mjs';
-import { createMapControls, createCollapsiblePanels, togglePanel, setMapLayer, createRouteLegend } from './ui-controls.mjs';
+import { createMapControls, createCollapsiblePanels, togglePanel, setMapLayer } from './ui-controls.mjs';
 import { DEBUG } from './debug-config.mjs';
 
 /**
@@ -192,9 +192,6 @@ export function createMapComponents(map, mapLayers) {
     const routeRenderer = createRouteRenderer(map, overlayState);
     const positionTracker = createPositionTracker(map, { markerRefs, popupManager });
 
-    // Create route legend control
-    const routeLegend = createRouteLegend(map);
-
     // Component coordination callbacks
     const callbacks = {
         zoomToFitTrack: () => {
@@ -268,8 +265,11 @@ export function createMapComponents(map, mapLayers) {
             routeRenderer.updateOverlayVisibility(overlayId, isVisible);
         },
 
-        onLegendUpdate: (overlayId) => {
-            if (routeLegend) routeLegend.update(overlayId, routeRenderer);
+        onLegendUpdate: () => {
+            const stats = routeRenderer.getActiveOverlayStats();
+            if (panels && panels.routePanelApi) {
+                panels.routePanelApi.updateLegend(stats);
+            }
         },
 
         getRouteOverlayState: () => {
@@ -338,7 +338,7 @@ export function createMapComponents(map, mapLayers) {
         reloadRoute: () => {
             if (routeData) {
                 clearMap(map, markerRefs, routeRenderer, popupManager, privacyFilter);
-                loadRouteData(routeData, map, markerRefs, markerManager, markerIcons, privacyFilter, routeRenderer, positionTracker, overlayState, panels, routeLegend);
+                loadRouteData(routeData, map, markerRefs, markerManager, markerIcons, privacyFilter, routeRenderer, positionTracker, overlayState, panels);
             }
         },
 
@@ -412,7 +412,6 @@ export function createMapComponents(map, mapLayers) {
         routeRenderer,
         positionTracker,
         panels,
-        routeLegend,
         callbacks,
         routeData: () => routeData,
         setRouteData: (data) => { routeData = data; }
@@ -431,10 +430,9 @@ export function createMapComponents(map, mapLayers) {
  * @param {object} positionTracker - Position tracker instance
  * @param {object} overlayState - Overlay visibility state
  * @param {object} [panels] - UI panels (for route availability updates)
- * @param {object} [routeLegend] - Route legend control
  * @returns {boolean} Success status
  */
-export function loadRouteData(gpsRouteData, map, markerRefs, markerManager, markerIcons, privacyFilter, routeRenderer, positionTracker, overlayState, panels, routeLegend) {
+export function loadRouteData(gpsRouteData, map, markerRefs, markerManager, markerIcons, privacyFilter, routeRenderer, positionTracker, overlayState, panels) {
 
     if (!gpsRouteData || !gpsRouteData.has_gps || !gpsRouteData.route_points) {
         return false;
@@ -506,11 +504,11 @@ export function loadRouteData(gpsRouteData, map, markerRefs, markerManager, mark
         panels.routePanelApi.updateAvailability(filteredRoutePoints);
     }
 
-    // Update route legend for active overlay
-    if (routeLegend) {
-        const activeId = routeRenderer.getActiveOverlayId();
-        if (activeId) {
-            routeLegend.update(activeId, routeRenderer);
+    // Update inline route legend for active overlay
+    if (panels && panels.routePanelApi) {
+        const stats = routeRenderer.getActiveOverlayStats();
+        if (stats) {
+            panels.routePanelApi.updateLegend(stats);
         }
     }
 

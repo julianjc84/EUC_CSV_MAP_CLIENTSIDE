@@ -139,6 +139,18 @@ export const STAT_METADATA = {
         unit: 'A'
     },
 
+    'Max Phase Current': {
+        formula: 'max(current_phase_amp)',
+        description: 'Peak phase current delivered to the motor. Phase current is typically higher than battery current and reflects actual motor load',
+        unit: 'A'
+    },
+
+    'Avg Phase Current': {
+        formula: 'avg(current_phase_amp)',
+        description: 'Average phase current delivered to the motor during the ride. Indicates sustained motor load level',
+        unit: 'A'
+    },
+
     'Battery Min': {
         formula: 'min(battery_pct)',
         description: 'Lowest battery percentage reached during the ride. Important for range planning and battery health',
@@ -193,6 +205,18 @@ export const STAT_METADATA = {
     'Battery Temp Max': {
         formula: 'max(temp_battery_c)',
         description: 'Maximum battery temperature reached. High temps (>50°C) can reduce battery lifespan and performance',
+        unit: '°C'
+    },
+
+    'CPU Temp Max': {
+        formula: 'max(temp_cpu_c)',
+        description: 'Maximum CPU/controller processor temperature reached. High temps can cause thermal throttling and reduced performance',
+        unit: '°C'
+    },
+
+    'IMU Temp Max': {
+        formula: 'max(temp_imu_c)',
+        description: 'Maximum IMU (Inertial Measurement Unit) temperature reached. The IMU measures tilt and balance — high temps can affect sensor accuracy',
         unit: '°C'
     },
 
